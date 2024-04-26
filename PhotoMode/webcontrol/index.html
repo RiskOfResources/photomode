@@ -1,0 +1,45 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Photo Mode Web Control</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" type="module"></script>
+  <script>
+  </script>
+</head>
+
+<body>
+<h1 id="header">
+  Trying to connect to mod...
+</h1>
+<button is="save-button">Save Settings</button><span class="subtext">Saves any changes you make to your game config</span>
+<control-board>
+</control-board>
+
+<template id="slider-settings-template">
+  <photo-setting>
+    <label class="settings-row">
+      <span class="labels">
+        <span class="control-name"></span>
+        <input type="number" class="control-value">
+      </span>
+      <input class="control" type="range">
+    </label>
+  </photo-setting>
+</template>
+<template id="checkbox-settings-template">
+  <photo-setting>
+    <label class="settings-row">
+      <span class="labels">
+        <span class="control-name"></span>
+        <input type="checkbox" class="control">
+      </span>
+    </label>
+  </photo-setting>
+</template>
+</body>
+
+</html>

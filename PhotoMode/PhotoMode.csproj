@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netstandard2.0</TargetFramework>
+        <!--    <AssemblyName>PhotoMode</AssemblyName>-->
+        <!--    <Description>My first plugin</Description>-->
+        <!--    <Version>1.0.0</Version>-->
+        <!--    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>-->
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DebugType>full</DebugType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!--    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />-->
+        <PackageReference Include="BepInEx.Core" Version="5.4.19"/>
+        <!--    <PackageReference Include="BepInEx.Core" Version="5.*" />-->
+        <!--    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />-->
+        <PackageReference Include="R2API.Core" Version="5.0.*"/>
+        <PackageReference Include="UnityEngine.Modules" Version="2019.4.26" IncludeAssets="compile"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all"/>
+    </ItemGroup>
+
+    <!-- This section just bundles a thunderstore package in /dist-->
+    <Target Name="Package" AfterTargets="Build">
+        <ItemGroup>
+            <Assembly Include="dist/assembly"/>
+<!--            <WebControlDist Include="dist/assembly/webcontrol"/>-->
+            <WebControl Include="webcontrol\*">
+                <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            </WebControl>
+        </ItemGroup>
+        <Copy SourceFiles="@(WebControl)" DestinationFolder="@(Assembly)"/>
+        <Copy SourceFiles="icon.png" DestinationFolder="@(Assembly)"/>
+        <Copy SourceFiles="manifest.json" DestinationFolder="@(Assembly)"/>
+        <Copy SourceFiles="$(OutputPath)PhotoMode.dll" DestinationFolder="@(Assembly)"/>
+        <Copy Condition="$(Configuration) == 'Debug'" SourceFiles="$(OutputPath)PhotoMode.pdb" DestinationFolder="@(Assembly)"/>
+        <ZipDirectory Overwrite="True" SourceDirectory="@(Assembly)" DestinationFile="dist\$(ProjectName).zip"/>
+    </Target>
+
+    <ItemGroup>
+        <Reference Include="RiskOfOptions">
+            <HintPath>RiskOfOptions\RiskOfOptions.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityPostprocessing">
+            <HintPath>Unity.Postprocessing.Runtime.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <Content Include="webcontrol/*.*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+</Project>
