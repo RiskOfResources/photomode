@@ -63,7 +63,7 @@ public class PhotoModeSettings {
       NextPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Previous Player", new KeyboardShortcut(KeyCode.LeftArrow));
       PrevPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Next Player", new KeyboardShortcut(KeyCode.RightArrow));
       ToggleScreenCapture = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Screen Capture", new KeyboardShortcut(KeyCode.None));
-      DisplayHelpText = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Display Help Text", new KeyboardShortcut(KeyCode.Question));
+      DisplayHelpText = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Display Help Text", new KeyboardShortcut(KeyCode.H));
  
       // arc settings
       SmoothArcCamera = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc", true, "Smoothly rotate/pan around the player instead of snapping");
@@ -74,7 +74,7 @@ public class PhotoModeSettings {
       // post processing
       PostProcessing = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Enable Post Processing", true, "Enable post processing effects");
       PostProcessingAntiAliasing = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Anti-aliasing", true, "Enable anti-aliasing");
-      PostProcessDepth = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Depth of Field", false, "Enable depth of field");
+      PostProcessDepth = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Depth of Field", true, "Enable depth of field");
       PostProcessFocusDistance = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focus Distance", 3.2f, "Distance to the point of focus. Adjustable on the fly with the scroll wheel", min: 0, max: 1000);
       PostProcessFocalLength = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focal Length", 50f, "Set the distance between the lens and the film. The larger the value is, the shallower the depth of field is.", min: 1, max: 300);
       PostProcessAperture = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Aperture", 5.6f, "Set the ratio of the aperture (known as f-stop or f-number). The smaller the value is, the shallower the depth of field is.", max: 64);

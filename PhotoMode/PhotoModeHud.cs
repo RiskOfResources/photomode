@@ -106,6 +106,7 @@ public class PhotoModeHud : MonoBehaviour {
                        Pan Camera: WASD
                        Change Roll: M3 + Mouse X
                        Change FOV: M2 + Mouse Y
+                       Change Focus Distance: Scroll Wheel
                        """;
       foreach (var setting in _settings.Settings) {
          if(setting is PhotoModeSetting<KeyboardShortcut> keySetting) {
