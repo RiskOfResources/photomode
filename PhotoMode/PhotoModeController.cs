@@ -45,6 +45,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private Vector3 _smoothRotationTarget = Vector3.zero;
    private int _selectedPlayerIndex;
    private Vector3 _arcPreviousPosition;
+   private LineRenderer _lineRenderer;
 
    // post processing
    private DepthOfField _depthOfField;
@@ -58,6 +59,10 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       
       // create HUD
       gameObject.AddComponent<PhotoModeHud>().Init(_settings);
+      var dollyPath = new GameObject("PhotoMode Dolly Path Visualizer");
+      dollyPath.transform.SetParent(gameObject.transform);
+      _lineRenderer = dollyPath.AddComponent<LineRenderer>();
+      _lineRenderer.enabled = _settings.ShowDollyPath.Value;
 
       var onlyPlayers = _settings.RestrictArcPlayers.Value;
       if (onlyPlayers) {
@@ -376,7 +381,14 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          var dollyStates = new List<CameraState> { _startCamera };
          dollyStates.AddRange(_dollyStates);
          dollyStates.Add(_endCamera);
-         _dollyPlaybackCoroutine = DollyPlayback(dollyStates);
+
+         if (dollyStates.Count > 2) {
+            var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value);
+            _dollyPlaybackCoroutine = SmoothPlayback(curve);
+         }
+         else {
+            _dollyPlaybackCoroutine = DollyPlayback(dollyStates);
+         }
          StartCoroutine(_dollyPlaybackCoroutine);
          return;
       }
@@ -617,6 +629,44 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       }
          
       _natives.Clear();
+   }
+
+   private IEnumerator SmoothPlayback(List<CameraState> positionCurve) {
+      List<CameraState> states = positionCurve;
+      var index = 0;
+      var linearCamera = states[0];
+      while (index < states.Count - 1) {
+         var currentState = states[index];
+         var nextState = states[index + 1];
+         var totalDistance = Vector3.Distance(currentState.position, nextState.position);
+         var cameraTransform = Camera.transform;
+
+         // don't divide by 0
+         if (Mathf.Approximately(totalDistance, 0)) {
+            _cameraState = nextState;
+            cameraTransform.position = _cameraState.position;
+            cameraTransform.rotation = _cameraState.rotation;
+            Camera.fieldOfView = _cameraState.fov;
+            index++;
+            continue;
+         }
+	
+         var distance = _camSpeed * Time.unscaledDeltaTime;
+         linearCamera.position = Vector3.MoveTowards(linearCamera.position, nextState.position, distance);
+         var linearDistance = Vector3.Distance(linearCamera.position, nextState.position);
+         var movePct = (totalDistance - linearDistance) / totalDistance;
+         _cameraState = CameraState.Lerp(ref currentState, ref nextState, movePct);
+ 
+         if (Mathf.Approximately(linearDistance, 0)) {
+            _cameraState = nextState;
+            index++;
+         }
+
+         cameraTransform.position = _cameraState.position;
+         cameraTransform.rotation = _cameraState.rotation;
+         Camera.fieldOfView = _cameraState.fov;
+         yield return null;
+      }
    }
 
    private IEnumerator DollyPlayback(List<CameraState> dollyStates) {

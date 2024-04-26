@@ -46,6 +46,7 @@ public class PhotoModeSettings {
       // dolly
       DollyEasingFunction = CreatePhotoModeSetting(SettingCategory.General, "Dolly Easing Function", Easing.Linear, "How the dolly cam transitions between states. In means start slow and end fast, out means start fast and end slow.");
       DollyCamSpeed = CreatePhotoModeSetting(SettingCategory.General, "Dolly Cam Speed", 5f, "Speed at which the dolly cam pans/rotates");
+      NumberOfDollyPoints = CreatePhotoModeSetting(SettingCategory.General, "Dolly Path Smoothing", 50, "How many line segments to break the dolly path into to create a smooth path. Only applies when you have at least 1 checkpoint. The more points you add the slower the dolly will move.", min: 2, max: 5000, increment: 1);
 		
       // key bindings
       RaiseCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Raise Camera", new KeyboardShortcut(KeyCode.E));
@@ -84,7 +85,7 @@ public class PhotoModeSettings {
       try {
          PostProcessVignetteColor = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Color", Color.black, "Vignette Color");
       }
-      catch (Exception e) {
+      catch (Exception _) {
          // TODO ignore errors for new because of serialization issues running outside unity
          // Logger.Log($"Color doesn't serialize: {e}");
       }
@@ -101,6 +102,7 @@ public class PhotoModeSettings {
       DisableIndicators = CreatePhotoModeSetting(SettingCategory.General, "Disable Ping Indicators In Photo Mode", false, "Enabling this can cause indicators to not reenable again until the scene is reloaded.");
       TextFadeTime = CreatePhotoModeSetting(SettingCategory.UI, "Text Fade Out Time", 1.5f, "How long to show text before fading out", min: 0, increment: 0.1f);
       ShowHelp = CreatePhotoModeSetting(SettingCategory.UI, "Show Help Dialog", true, "Show the help dialog when entering photo mode");
+      ShowDollyPath = CreatePhotoModeSetting(SettingCategory.UI, "Show Dolly Path", false, "Show the path of the dolly (mostly for debugging).");
       
       // experimental
       DisableAllMovement = CreatePhotoModeSetting(SettingCategory.Experimental, "Disable All Camera Movement", false, "Disable movement for external control or testing.");
@@ -166,6 +168,7 @@ public class PhotoModeSettings {
    // dolly
    public readonly PhotoModeSetting<Easing> DollyEasingFunction;
    public readonly PhotoModeSetting<float> DollyCamSpeed;
+   public readonly PhotoModeSetting<float> NumberOfDollyPoints;
 	
    // key bindings
    public readonly PhotoModeSetting<KeyboardShortcut> RaiseCameraKey;
@@ -214,6 +217,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> DisableIndicators;
    public readonly PhotoModeSetting<float> TextFadeTime;
    public readonly PhotoModeSetting<bool> ShowHelp;
+   public readonly PhotoModeSetting<bool> ShowDollyPath;
  
    public readonly PhotoModeSetting<bool> DisableAllMovement;
    public readonly PhotoModeSetting<bool> ExportLinearColorSpace;
