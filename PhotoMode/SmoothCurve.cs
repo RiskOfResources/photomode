@@ -6,7 +6,9 @@ using UnityEngine;
 namespace PhotoMode;
 
 public class SmoothCurve {
-	public static List<CameraState> GenerateSmoothCurve(LineRenderer lineRenderer, List<CameraState> controlPoints, int numberOfPoints) {
+	public static List<CameraState> GenerateSmoothCurve(LineRenderer lineRenderer,
+		List<CameraState> controlPoints, int numberOfPoints, bool smoothDolly)
+	{
 		Color color = Color.white;
 		float width = 0.2f;
 		var curve = new List<CameraState>();
@@ -67,14 +69,23 @@ public class SmoothCurve {
 				var nextState = controlPoints[j + 1];
 				var ratio = (float) (i + j * numberOfPoints) / lineRenderer.positionCount;
 				
-				// only consider the starting and ending rotations
+				// if smooth only consider the starting and ending rotations
 				// so there's no bouncing around control points
 				// when the rotation speed abruptly changes
-				curve.Add(new CameraState() {
-				  position = position,
-				  rotation = Quaternion.Slerp(controlPoints[0].rotation, controlPoints.Last().rotation, ratio),
-				  fov = Mathf.Lerp(currentState.fov, nextState.fov, ratio)
-				});
+				if (smoothDolly) {
+					curve.Add(new CameraState() {
+						position = position,
+						rotation = Quaternion.Slerp(controlPoints[0].rotation, controlPoints.Last().rotation, ratio),
+						fov = Mathf.Lerp(currentState.fov, controlPoints.Last().fov, ratio),
+					});
+				}
+				else {
+					curve.Add(new CameraState() {
+						position = position,
+						rotation = Quaternion.Slerp(currentState.rotation, nextState.rotation, (float) i / numberOfPoints),
+						fov = Mathf.Lerp(currentState.fov, nextState.fov, (float) i / numberOfPoints),
+					});
+				}
 			}
 		}
 

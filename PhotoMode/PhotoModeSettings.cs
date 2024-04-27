@@ -40,13 +40,20 @@ public class PhotoModeSettings {
       PanningSmooth = CreatePhotoModeSetting(SettingCategory.General, "Camera Smooth Pan Speed", 50f, "How fast the smooth pan camera can move.");
       PanningSmoothTime = CreatePhotoModeSetting(SettingCategory.General, "Camera Panning Smoothing Time", 1.5f, "How many seconds to smooth the camera position while panning (inertia after releasing panning keys)");
       MaxSmoothRotationSpeed = CreatePhotoModeSetting(SettingCategory.General, "Smooth Rotation Max Speed", 5f, "How fast the smooth camera can rotate");
-      CreatePhotoModeSetting(SettingCategory.General, "Smooth Camera Rotation Deadzone", 0.001f, "How slowly the camera can move before stopping");
       RotationSmoothDecay = CreatePhotoModeSetting(SettingCategory.General, "Smooth Rotation Decay", 0.25f, "How much to decay the rotation speed after stopping mouse movement", min: 0);
 		
       // dolly
       DollyEasingFunction = CreatePhotoModeSetting(SettingCategory.General, "Dolly Easing Function", Easing.Linear, "How the dolly cam transitions between states. In means start slow and end fast, out means start fast and end slow.");
       DollyCamSpeed = CreatePhotoModeSetting(SettingCategory.General, "Dolly Cam Speed", 5f, "Speed at which the dolly cam pans/rotates");
       NumberOfDollyPoints = CreatePhotoModeSetting(SettingCategory.General, "Dolly Path Smoothing", 50, "How many line segments to break the dolly path into to create a smooth path. Only applies when you have at least 1 checkpoint. The more points you add the slower the dolly will move.", min: 2, max: 5000, increment: 1);
+      SmoothDolly = CreatePhotoModeSetting(SettingCategory.General, "Smooth Dolly Cam", true, "If the dolly cam should always be smooth (when adding at least 1 checkpoint). " +
+         "This sounds good but it has a limitation: the dolly cam will always move/rotate smoothly but it will only rotate from the starting rotation to the final dolly end rotation regardless of any rotation set at each checkpoint. " +
+         "This means if you create a dolly path that rotates ~300 degrees the camera will likely rotate ~60 degrees to follow the shortest path to the final rotation. " +
+         "If you uncheck this the dolly will follow the rotation at each checkpoint but if your checkpoints aren't smoothly spaced your camera will look like it bounces at each checkpoint. " +
+         "More Info: The line that the dolly cam follows is always smooth but the rotation might make it look rough when disabling this setting because between checkpoint A and checkpoint B the dolly tries to " +
+         "hit the goal rotation when it reaches checkpoint B. If the distance between the points is 50 units, your difference in rotation is 50 degrees, and your dolly moves at 1 unit/second, the dolly will rotate at 1 degrees/second. " +
+         "Now if you set another point C with the same parameters and the distance from B to C is 100 units and your rotation from B to C is 50 degrees your dolly will rotate at 2 degrees/second. This will create a noticeable jolt at " +
+         "the checkpoint as your dolly rotation instantly speeds up. If instead you properly space your dolly checkpoints so that the rotations are congruent to the distance between checkpoints it's a better option to leave this disabled.");
 		
       // key bindings
       RaiseCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Raise Camera", new KeyboardShortcut(KeyCode.E));
@@ -169,6 +176,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<Easing> DollyEasingFunction;
    public readonly PhotoModeSetting<float> DollyCamSpeed;
    public readonly PhotoModeSetting<float> NumberOfDollyPoints;
+   public readonly PhotoModeSetting<bool> SmoothDolly;
 	
    // key bindings
    public readonly PhotoModeSetting<KeyboardShortcut> RaiseCameraKey;

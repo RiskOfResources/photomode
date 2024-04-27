@@ -383,7 +383,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          dollyStates.Add(_endCamera);
 
          if (dollyStates.Count > 2) {
-            var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value);
+            var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
             _dollyPlaybackCoroutine = SmoothPlayback(curve);
          }
          else {
