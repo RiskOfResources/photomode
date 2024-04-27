@@ -16,7 +16,7 @@ jobs:
           dotnet-version: 8.x
       - name: Build
         run: dotnet build -c Release
-      - run: gh release create $(date -Im) ./photomode/dist/PhotoMode.zip -p
+      - run: gh release create $(date -Im) ./PhotoMode/dist/PhotoMode.zip -p
         env:
           GH_TOKEN: ${{ github.TOKEN }}
         name: Creates a release in GitHub and uploads attachments
