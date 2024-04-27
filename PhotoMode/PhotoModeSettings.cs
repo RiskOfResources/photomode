@@ -101,7 +101,7 @@ public class PhotoModeSettings {
       PostProcessVignetteSmoothness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Smoothness", .5f, "Set the smoothness of the Vignette borders.");
       PostProcessVignetteRoundness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Roundness", 1f, "Set the value to round the Vignette. Lower values will make a more squared vignette.");
       PostProcessVignetteRounded = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Rounded", false, "Enable this checkbox to make the vignette perfectly round. When disabled, the Vignette effect is dependent on the current aspect ratio.");
-      EnableGlobalPostProcessing = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Break Before Color Grading", false, "Stop applying post-process effects before color grading for exporting to external color grading");
+      BreakBeforeColorGrading = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Break Before Color Grading", false, "Stop applying post-process effects before color grading for exporting to external color grading");
       PostProcessColorGrading = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Color Grading", false, "Enable LUT color grading (requires .cube LUT name specified)");
       LutName = CreatePhotoModeSetting(SettingCategory.PostProcessing, "LUT Name", "", "The name of your .cube LUT to import (full name including .cube extension)");
 		
@@ -218,7 +218,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<float> PostProcessVignetteSmoothness;
    public readonly PhotoModeSetting<float> PostProcessVignetteRoundness;
    public readonly PhotoModeSetting<bool> PostProcessVignetteRounded;
-   public readonly PhotoModeSetting<bool> EnableGlobalPostProcessing;
+   public readonly PhotoModeSetting<bool> BreakBeforeColorGrading;
    public readonly PhotoModeSetting<bool> PostProcessColorGrading;
 	
    // other

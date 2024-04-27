@@ -132,6 +132,30 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          return;
       }
 
+      var globalPostProcess = cameraRigController.sceneCam.GetComponentInChildren<PostProcessVolume>();
+      if (globalPostProcess) {
+         globalPostProcess.enabled = !_settings.BreakBeforeColorGrading.Value;
+      }
+
+      SetupPostProcessing();
+
+      var (w, h) = (Screen.width, Screen.height);
+      if (_settings.ExportLinearColorSpace.Value) {
+         _rt.grab = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+         _rt.flip = new RenderTexture(w, h, 24);
+      }
+      else {
+         _rt.grab = new RenderTexture(w, h, 24);
+         _rt.flip = new RenderTexture(w, h, 24);
+      }
+      
+      OnExit += (_, _) => {
+         Destroy(_rt.grab);
+         Destroy(_rt.flip);
+      };
+   }
+
+   private void SetupPostProcessing() {
       var postProcessingEnabled = _settings.PostProcessing.Value;
       
       // vignette
@@ -152,6 +176,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       var colorGrading = ScriptableObject.CreateInstance<ColorGrading>();
       colorGrading.enabled.value = _settings.PostProcessColorGrading.Value;
 
+      // import LUT if specified
       if (_settings.PostProcessColorGrading.Value && _lutRef is null && !string.IsNullOrEmpty(_settings.LutName.Value)) {
          var filePath = System.IO.Path.Combine(Application.dataPath, _settings.LutName.Value);
          _lutRef = CubeLutImporter.ImportCubeLut(filePath);
@@ -166,35 +191,19 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       var antiAliasing = _postProcessLayer.antialiasingMode;
       _postProcessLayer.antialiasingMode = _settings.PostProcessingAntiAliasing.Value ? PostProcessLayer.Antialiasing.TemporalAntialiasing : PostProcessLayer.Antialiasing.None;
       
-      var globalPostProcess = cameraRigController.sceneCam.GetComponentInChildren<PostProcessVolume>();
-      if (globalPostProcess) {
-         globalPostProcess.enabled = !_settings.EnableGlobalPostProcessing.Value;
-      }
- 
+      // use global post process layer
       var layer = LayerMask.NameToLayer("PostProcess");
       layer = layer == -1 ? 20 : layer;
       var quickVolume = PostProcessManager.instance.QuickVolume(layer, 1000f, _vignette, _depthOfField, colorGrading);
       quickVolume.isGlobal = true;
       quickVolume.weight = 1;
       quickVolume.enabled = _settings.PostProcessing.Value;
+      var basePostProcessingEnabled = _postProcessLayer.enabled;
+ 
       OnExit += (_, _) => {
          RuntimeUtilities.DestroyVolume(quickVolume, true, true);
+         _postProcessLayer.enabled = basePostProcessingEnabled;
          _postProcessLayer.antialiasingMode = antiAliasing;
-      };
- 
-      var (w, h) = (Screen.width, Screen.height);
-      if (_settings.ExportLinearColorSpace.Value) {
-         _rt.grab = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-         _rt.flip = new RenderTexture(w, h, 24);
-      }
-      else {
-         _rt.grab = new RenderTexture(w, h, 24);
-         _rt.flip = new RenderTexture(w, h, 24);
-      }
-      
-      OnExit += (_, _) => {
-         Destroy(_rt.grab);
-         Destroy(_rt.flip);
       };
    }
 
