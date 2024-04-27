@@ -1,0 +1,22 @@
+name: build
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.x
+      - name: Build
+        run: dotnet build -c Release
+      - run: gh release create $(date -Im) ./photomode/dist/PhotoMode.zip -p
+        env:
+          GH_TOKEN: ${{ github.TOKEN }}
+        name: Creates a release in GitHub and uploads attachments
