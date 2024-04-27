@@ -76,7 +76,7 @@ public class SmoothCurve {
 					curve.Add(new CameraState() {
 						position = position,
 						rotation = Quaternion.Slerp(controlPoints[0].rotation, controlPoints.Last().rotation, ratio),
-						fov = Mathf.Lerp(currentState.fov, controlPoints.Last().fov, ratio),
+						fov = Mathf.Lerp(currentState.fov, nextState.fov, (float) i / numberOfPoints),
 					});
 				}
 				else {
