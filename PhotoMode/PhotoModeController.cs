@@ -33,7 +33,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
 
    private bool gamepad => (int)currentInputSource == 1;
 
-   private event EventHandler OnExit;
+   public event EventHandler OnExit;
 
    private float _timeScale = 1f;
    private IEnumerator _dollyPlaybackCoroutine;
@@ -52,8 +52,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private Vignette _vignette;
    private PostProcessLayer _postProcessLayer;
 
-   internal void EnterPhotoMode(PhotoModeSettings settings, PauseScreenController pauseController,
-      CameraRigController cameraRigController) {
+   internal void EnterPhotoMode(PhotoModeSettings settings, CameraRigController cameraRigController) {
       _settings = settings;
       this.cameraRigController = cameraRigController;
       
@@ -74,12 +73,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          _players = modelLocators != null ? modelLocators.Select(m => m.transform).ToList() : new List<Transform>();
       }
       Logger.Log("Entering photo mode");
-      pauseController.gameObject.SetActive(false);
       OnExit += (_, _) => {
-         if (pauseController) {
-            pauseController.gameObject.SetActive(true);
-         }
-
          if (cameraRigController) {
             cameraRigController.enableFading = true;
             cameraRigController.SetOverrideCam(null);
@@ -287,7 +281,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    {
       UserProfile userProfile = cameraRigController.localUserViewer.userProfile;
       Player inputPlayer = cameraRigController.localUserViewer.inputPlayer;
-      if (inputPlayer.GetButton(25))
+      if (inputPlayer.GetButton(25) || Input.GetKeyDown(_settings.TogglePhotoMode.Value.MainKey))
       {
          Destroy(gameObject);
          return;
@@ -560,7 +554,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private bool _writing;
 
    private void LateUpdate() {
-      if (Input.GetKeyDown(_settings.ToggleScreenCapture.Value.MainKey)) {
+      if (Input.GetKeyDown(_settings.CaptureScreen.Value.MainKey)) {
          if (_writing) {
             DisplayAndFadeOutText("Still writing previous recording, try again later");
             return;
@@ -569,7 +563,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          _takeSnapshot = TakeSnapshot();
          StartCoroutine(_takeSnapshot);
       } 
-      else if (Input.GetKeyUp(_settings.ToggleScreenCapture.Value.MainKey)) {
+      else if (Input.GetKeyUp(_settings.CaptureScreen.Value.MainKey)) {
          if (_writing) {
             DisplayAndFadeOutText("Still writing previous recording, try again later");
             return;
@@ -635,6 +629,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
             File.WriteAllBytes($"{path}/recordings/frame-{index}.png", encoded.ToArray());
             buffer.Dispose();
          }
+         DisplayAndFadeOutText($"Wrote {_natives.Count} files to {path}/recordings");
       }
          
       _natives.Clear();

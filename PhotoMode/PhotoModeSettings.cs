@@ -56,6 +56,7 @@ public class PhotoModeSettings {
          "the checkpoint as your dolly rotation instantly speeds up. If instead you properly space your dolly checkpoints so that the rotations are congruent to the distance between checkpoints it's a better option to leave this disabled.");
 		
       // key bindings
+      TogglePhotoMode = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Photo Mode", new KeyboardShortcut(KeyCode.F9));
       RaiseCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Raise Camera", new KeyboardShortcut(KeyCode.E));
       LowerCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Lower Camera", new KeyboardShortcut(KeyCode.Q));
       CameraSprintKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Speed Up Camera", new KeyboardShortcut(KeyCode.LeftControl));
@@ -70,13 +71,13 @@ public class PhotoModeSettings {
       ToggleSmoothCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Smooth Camera", new KeyboardShortcut(KeyCode.G));
       NextPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Previous Player", new KeyboardShortcut(KeyCode.LeftArrow));
       PrevPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Next Player", new KeyboardShortcut(KeyCode.RightArrow));
-      ToggleScreenCapture = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Screen Capture", new KeyboardShortcut(KeyCode.None));
+      CaptureScreen = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Capture Screen", new KeyboardShortcut(KeyCode.None), "Records RAW textures to PNGs and saves into your Risk of Rain 2 data folder. Huge file size since it captures at 4x resolution and at your current frame rate. Limit the frame rate or change resolution to adjust.");
       DisplayHelpText = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Display Help Text", new KeyboardShortcut(KeyCode.H));
  
       // arc settings
       SmoothArcCamera = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc", true, "Smoothly rotate/pan around the player instead of snapping");
       ArcPanningSmoothTime = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Panning Smooth Time", 1f, "How many seconds to smooth the camera position when the target of an arc camera moves");
-      SmoothArcCamSpeed = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc Camera Speed", 1f, "Amount of smoothing for the arc camera");
+      SmoothArcCamSpeed = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc Camera Speed", 5f, "Amount of smoothing for the arc camera");
       RestrictArcPlayers = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Around Players Only", true, "Whether to arc around players or any model in the scene");
 
       // post processing
@@ -179,6 +180,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> SmoothDolly;
 	
    // key bindings
+   public readonly PhotoModeSetting<KeyboardShortcut> TogglePhotoMode;
    public readonly PhotoModeSetting<KeyboardShortcut> RaiseCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> LowerCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> CameraSprintKey;
@@ -194,7 +196,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<KeyboardShortcut> ToggleSmoothCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> NextPlayerKey;
    public readonly PhotoModeSetting<KeyboardShortcut> PrevPlayerKey;
-   public readonly PhotoModeSetting<KeyboardShortcut> ToggleScreenCapture;
+   public readonly PhotoModeSetting<KeyboardShortcut> CaptureScreen;
    public readonly PhotoModeSetting<KeyboardShortcut> DisplayHelpText;
 	
    // arc settings
