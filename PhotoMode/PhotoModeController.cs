@@ -24,7 +24,6 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private static CameraState _startCamera;
    private static CameraState _endCamera;
    private static List<CameraState> _dollyStates = new();
-   private Texture3D _lutRef;
    private bool _recordEndPosition;
 
    private Camera Camera => cameraRigController.sceneCam;
@@ -47,23 +46,27 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private Vector3 _arcPreviousPosition;
    private LineRenderer _lineRenderer;
 
-   // post processing
-   private DepthOfField _depthOfField;
-   private Vignette _vignette;
-   private PostProcessLayer _postProcessLayer;
-
    internal void EnterPhotoMode(PhotoModeSettings settings, CameraRigController cameraRigController) {
       _settings = settings;
       this.cameraRigController = cameraRigController;
       
       // create HUD
-      gameObject.AddComponent<PhotoModeHud>().Init(_settings);
+      gameObject.AddComponent<PhotoModeHud>().Init(settings);
+
+      // create post-processing
+      if (Camera.gameObject.TryGetComponent<PostProcessLayer>(out var postProcessLayer)) {
+         gameObject.AddComponent<PhotoModePostProcessing>().Init(settings, postProcessLayer);
+      }
+      else {
+         Logger.Log("Post-process layer not found. No post-processing enabled.");
+      }
+      
       var dollyPath = new GameObject("PhotoMode Dolly Path Visualizer");
       dollyPath.transform.SetParent(gameObject.transform);
       _lineRenderer = dollyPath.AddComponent<LineRenderer>();
-      _lineRenderer.enabled = _settings.ShowDollyPath.Value;
+      _lineRenderer.enabled = settings.ShowDollyPath.Value;
 
-      var onlyPlayers = _settings.RestrictArcPlayers.Value;
+      var onlyPlayers = settings.RestrictArcPlayers.Value;
       if (onlyPlayers) {
          var characterModels = FindObjectsOfType<CharacterModel>();
          _players = characterModels != null ? characterModels.Select(m => m.transform).ToList() : new List<Transform>();
@@ -109,32 +112,21 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       };
 
       this.cameraRigController.hud.mainContainer.GetComponent<Canvas>().enabled = false;
-      if (_settings.DisableIndicators.Value)
-      {
-         SetIndicatorsVisible(visible: false);
-         OnExit += (_, _) => {
-            SetIndicatorsVisible(visible: true);
-         };
-      }
+
+      SetIndicatorsVisible(settings.DisableIndicators.Value);
+      OnExit += (_, _) => SetIndicatorsVisible(true);
+ 
       Player inputPlayer = this.cameraRigController.localUserViewer.inputPlayer;
       inputPlayer.controllers.AddLastActiveControllerChangedDelegate(OnLastActiveControllerChanged);
       OnLastActiveControllerChanged(inputPlayer, inputPlayer.controllers.GetLastActiveController());
 
-      var cameraGameObject = Camera.gameObject;
-      if (!cameraGameObject.TryGetComponent(out _postProcessLayer)) {
-         Logger.Log("Post process layer not found");
-         return;
-      }
-
       var globalPostProcess = cameraRigController.sceneCam.GetComponentInChildren<PostProcessVolume>();
       if (globalPostProcess) {
-         globalPostProcess.enabled = !_settings.BreakBeforeColorGrading.Value;
+         globalPostProcess.enabled = !settings.BreakBeforeColorGrading.Value;
       }
 
-      SetupPostProcessing();
-
       var (w, h) = (Screen.width, Screen.height);
-      if (_settings.ExportLinearColorSpace.Value) {
+      if (settings.ExportLinearColorSpace.Value) {
          _rt.grab = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
          _rt.flip = new RenderTexture(w, h, 24);
       }
@@ -142,62 +134,10 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          _rt.grab = new RenderTexture(w, h, 24);
          _rt.flip = new RenderTexture(w, h, 24);
       }
-      
+ 
       OnExit += (_, _) => {
          Destroy(_rt.grab);
          Destroy(_rt.flip);
-      };
-   }
-
-   private void SetupPostProcessing() {
-      var postProcessingEnabled = _settings.PostProcessing.Value;
-      
-      // vignette
-      _vignette = ScriptableObject.CreateInstance<Vignette>();
-      _vignette.enabled.value = postProcessingEnabled && _settings.PostProcessVignette.Value;
-      _vignette.color.Override(_settings.PostProcessVignetteColor.Value);
-      _vignette.intensity.Override(_settings.PostProcessVignetteIntensity.Value);
-      _vignette.smoothness.Override(_settings.PostProcessVignetteSmoothness.Value);
-      _vignette.roundness.Override(_settings.PostProcessVignetteRoundness.Value);
-      _vignette.rounded.Override(_settings.PostProcessVignetteRounded.Value);
-      
-      // depth of field
-      _depthOfField = ScriptableObject.CreateInstance<DepthOfField>();
-      _depthOfField.enabled.value = postProcessingEnabled && _settings.PostProcessDepth.Value;
-      _depthOfField.focusDistance.Override(_settings.PostProcessFocusDistance.Value);
-      _depthOfField.focalLength.Override(_settings.PostProcessFocalLength.Value);
-      _depthOfField.aperture.Override(_settings.PostProcessAperture.Value);
-      var colorGrading = ScriptableObject.CreateInstance<ColorGrading>();
-      colorGrading.enabled.value = _settings.PostProcessColorGrading.Value;
-
-      // import LUT if specified
-      if (_settings.PostProcessColorGrading.Value && _lutRef is null && !string.IsNullOrEmpty(_settings.LutName.Value)) {
-         var filePath = System.IO.Path.Combine(Application.dataPath, _settings.LutName.Value);
-         _lutRef = CubeLutImporter.ImportCubeLut(filePath);
-
-         if (_lutRef is not null) {
-            colorGrading.externalLut.Override(_lutRef);
-            colorGrading.gradingMode.Override(GradingMode.External);
-         }
-      }
-      
-      // anti-aliasing
-      var antiAliasing = _postProcessLayer.antialiasingMode;
-      _postProcessLayer.antialiasingMode = _settings.PostProcessingAntiAliasing.Value ? PostProcessLayer.Antialiasing.TemporalAntialiasing : PostProcessLayer.Antialiasing.None;
-      
-      // use global post process layer
-      var layer = LayerMask.NameToLayer("PostProcess");
-      layer = layer == -1 ? 20 : layer;
-      var quickVolume = PostProcessManager.instance.QuickVolume(layer, 1000f, _vignette, _depthOfField, colorGrading);
-      quickVolume.isGlobal = true;
-      quickVolume.weight = 1;
-      quickVolume.enabled = _settings.PostProcessing.Value;
-      var basePostProcessingEnabled = _postProcessLayer.enabled;
- 
-      OnExit += (_, _) => {
-         RuntimeUtilities.DestroyVolume(quickVolume, true, true);
-         _postProcessLayer.enabled = basePostProcessingEnabled;
-         _postProcessLayer.antialiasingMode = antiAliasing;
       };
    }
 
@@ -300,24 +240,6 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       if (Mathf.Abs(scroll) > 0) {
          _settings.PostProcessFocusDistance.Value = Mathf.Max(0, _settings.PostProcessFocusDistance.Value + scroll * _settings.PostProcessingFocusDistanceStep.Value);
          DisplayAndFadeOutText($"Focus Distance: {_settings.PostProcessFocusDistance.Value}");
-      }
-
-      if (_settings.PostProcessing.Value && _postProcessLayer) {
-         _postProcessLayer.enabled = true;
-         _depthOfField.enabled.Override(_settings.PostProcessDepth.Value);
-         _depthOfField.focusDistance.Override(_settings.PostProcessFocusDistance.Value);
-         _depthOfField.focalLength.Override(_settings.PostProcessFocalLength.Value);
-         _depthOfField.aperture.Override(_settings.PostProcessAperture.Value);
-         _vignette.enabled.Override(_settings.PostProcessVignette.Value);
-         _vignette.color.Override(_settings.PostProcessVignetteColor.Value);
-         _vignette.intensity.Override(_settings.PostProcessVignetteIntensity.Value);
-         _vignette.smoothness.Override(_settings.PostProcessVignetteSmoothness.Value);
-         _vignette.roundness.Override(_settings.PostProcessVignetteRoundness.Value);
-         _vignette.rounded.Override(_settings.PostProcessVignetteRounded.Value);
-         _postProcessLayer.antialiasingMode = _settings.PostProcessingAntiAliasing.Value ? PostProcessLayer.Antialiasing.TemporalAntialiasing : PostProcessLayer.Antialiasing.None;
-      }
-      else {
-         _postProcessLayer.enabled = false;
       }
 
       if (_settings.DisableAllMovement.Value) {
