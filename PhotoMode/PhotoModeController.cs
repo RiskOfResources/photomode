@@ -38,6 +38,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private IEnumerator _dollyPlaybackCoroutine;
    private float _camSpeed;
    private float _rollSum;
+   private bool _isArcing;
    private Vector3 _smoothArcOffset = Vector3.zero;
    private Vector3 _arcSmoothPositionVelocity = Vector3.zero;
    private Vector3 _smoothPositionVelocity = Vector3.zero;
@@ -378,8 +379,11 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          _smoothRotationTarget.y = Mathf.Clamp(_smoothRotationTarget.y, -maxSpeed, maxSpeed);
 
          var deadzone = 0.001f;
-         _smoothRotationTarget.x = Mathf.Abs(_smoothRotationTarget.x) < deadzone ? 0 : _smoothRotationTarget.x;
-         _smoothRotationTarget.y = Mathf.Abs(_smoothRotationTarget.y) < deadzone ? 0 : _smoothRotationTarget.y;
+         var magnitude = _smoothRotationTarget.magnitude;
+         if (magnitude < deadzone) {
+            _smoothRotationTarget = Vector3.zero;
+         }
+         
          var upRot = rolling || zooming ? Quaternion.identity : Quaternion.AngleAxis(_smoothRotationTarget.y, Vector3.left);
          var leftRot = rolling || zooming ? Quaternion.identity : Quaternion.AngleAxis( _smoothRotationTarget.x, Vector3.up);
          _cameraState.rotation = leftRot * _cameraState.rotation * upRot;
@@ -406,11 +410,19 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       else if (goingUp && (upDiff < 2 || flipped)) {
          _cameraState.rotation = Quaternion.Euler(272, euler.y, 0);
       }
-		
-      if (Input.GetKeyDown(_settings.ArcCameraKey.Value.MainKey) && _players.Count > 0) {
+
+      var arcKeyDown = Input.GetKeyDown(_settings.ArcCameraKey.Value.MainKey);
+      if (arcKeyDown && _settings.ToggleArcCamera.Value) {
+         _isArcing = !_isArcing;
+      }
+      else if (!_settings.ToggleArcCamera.Value) {
+         _isArcing = Input.GetKey(_settings.ArcCameraKey.Value.MainKey);
+      }
+ 
+      if (arcKeyDown && _players.Count > 0) {
          _arcPreviousPosition = _players[_selectedPlayerIndex].position;
          _smoothArcOffset = _cameraState.position - _players[_selectedPlayerIndex].position;
-      } else if (Input.GetKey(_settings.ArcCameraKey.Value.MainKey) && _players.Count > 0) {
+      } else if (_isArcing && _players.Count > 0) {
          Quaternion rotation;
          var player = _players[_selectedPlayerIndex];
 

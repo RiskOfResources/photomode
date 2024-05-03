@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace PhotoMode;
 
-[BepInPlugin("com.riskofresources.discohatesme.photomode", "PhotoMode", "3.0.3")]
+[BepInPlugin("com.riskofresources.discohatesme.photomode", "PhotoMode", "3.0.4")]
 [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
 [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
 public class PhotoModePlugin : BaseUnityPlugin

@@ -74,6 +74,7 @@ public class PhotoModeSettings {
       DisplayHelpText = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Display Help Text", new KeyboardShortcut(KeyCode.H));
  
       // arc settings
+      ToggleArcCamera = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Toggle Arc Camera", false, "True to toggle arc camera on keypress instead of needing to hold the button.");
       SmoothArcCamera = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc", true, "Smoothly rotate/pan around the player instead of snapping");
       ArcPanningSmoothTime = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Panning Smooth Time", 1f, "How many seconds to smooth the camera position when the target of an arc camera moves", 0);
       SmoothArcCamSpeed = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc Camera Speed", 5f, "Amount of smoothing for the arc camera", 0);
@@ -198,6 +199,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<KeyboardShortcut> DisplayHelpText;
 	
    // arc settings
+   public readonly PhotoModeSetting<bool> ToggleArcCamera;
    public readonly PhotoModeSetting<bool> SmoothArcCamera;
    public readonly PhotoModeSetting<float> ArcPanningSmoothTime;
    public readonly PhotoModeSetting<float> SmoothArcCamSpeed;
