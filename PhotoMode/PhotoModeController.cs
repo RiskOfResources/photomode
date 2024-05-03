@@ -221,8 +221,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    {
       UserProfile userProfile = cameraRigController.localUserViewer.userProfile;
       Player inputPlayer = cameraRigController.localUserViewer.inputPlayer;
-      if (inputPlayer.GetButton(25) || Input.GetKeyDown(_settings.TogglePhotoMode.Value.MainKey))
-      {
+      if (inputPlayer.GetButton(25)) {
          Destroy(gameObject);
          return;
       }

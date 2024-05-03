@@ -56,7 +56,6 @@ public class PhotoModeSettings {
          "the checkpoint as your dolly rotation instantly speeds up. If instead you properly space your dolly checkpoints so that the rotations are congruent to the distance between checkpoints it's a better option to leave this disabled.");
 		
       // key bindings
-      TogglePhotoMode = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Photo Mode", new KeyboardShortcut(KeyCode.F9));
       RaiseCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Raise Camera", new KeyboardShortcut(KeyCode.E));
       LowerCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Lower Camera", new KeyboardShortcut(KeyCode.Q));
       CameraSprintKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Speed Up Camera", new KeyboardShortcut(KeyCode.LeftControl));
@@ -180,7 +179,6 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> SmoothDolly;
 	
    // key bindings
-   public readonly PhotoModeSetting<KeyboardShortcut> TogglePhotoMode;
    public readonly PhotoModeSetting<KeyboardShortcut> RaiseCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> LowerCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> CameraSprintKey;
