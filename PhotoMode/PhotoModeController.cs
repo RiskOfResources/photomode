@@ -23,7 +23,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private CameraState _cameraState;
    private static CameraState _startCamera;
    private static CameraState _endCamera;
-   private static List<CameraState> _dollyStates = new();
+   private static readonly List<CameraState> _dollyStates = new();
    private bool _recordEndPosition;
 
    private Camera Camera => cameraRigController.sceneCam;

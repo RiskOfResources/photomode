@@ -24,11 +24,11 @@ public class PhotoModeSettings {
       _configFile = configFile;
       BaseDir = baseDir;
       // PresetName = CreatePhotoModeSetting(SettingCategory.General, "Preset Name", "Default", "Name of the preset.");
-      CameraSensitivity = CreatePhotoModeSetting(SettingCategory.General, "Camera Sensitivity", 1f, "Sensitivity of the camera movements.");
-      CameraPanSpeed = CreatePhotoModeSetting(SettingCategory.General, "Camera Pan Speed", 5f, "Speed of the camera pan.");
-      CameraElevationSpeed = CreatePhotoModeSetting(SettingCategory.General, "Camera Elevation Speed", 5f, "Speed of the camera raise/lower.");
-      CameraRollSensitivity = CreatePhotoModeSetting(SettingCategory.General, "Camera Roll Sensitivity", 10f, "Sensitivity of the camera roll.");
-      CameraFovSensitivity = CreatePhotoModeSetting(SettingCategory.General, "Camera FOV Sensitivity", 10f, "Sensitivity of the camera FOV speed.");
+      CameraSensitivity = CreatePhotoModeSetting(SettingCategory.General, "Camera Sensitivity", 1f, "Sensitivity of the camera movements.", 0);
+      CameraPanSpeed = CreatePhotoModeSetting(SettingCategory.General, "Camera Pan Speed", 5f, "Speed of the camera pan.", 0);
+      CameraElevationSpeed = CreatePhotoModeSetting(SettingCategory.General, "Camera Elevation Speed", 5f, "Speed of the camera raise/lower.", 0);
+      CameraRollSensitivity = CreatePhotoModeSetting(SettingCategory.General, "Camera Roll Sensitivity", 10f, "Sensitivity of the camera roll.", 0);
+      CameraFovSensitivity = CreatePhotoModeSetting(SettingCategory.General, "Camera FOV Sensitivity", 10f, "Sensitivity of the camera FOV speed.", 0);
       CameraSprintMultiplier = CreatePhotoModeSetting(SettingCategory.General, "Camera Sprint Multiplier", 5f, "Multiplier for how much the camera increases in speed when held.", min: 1);
       CameraSlowMultiplier = CreatePhotoModeSetting(SettingCategory.General, "Camera Slow Multiplier", 0.3f, "Multiplier for how much the camera decreases in speed when held.", max: 1);
       SnapRollEnabled = CreatePhotoModeSetting(SettingCategory.General, "Snap Roll Enabled", true, "If the roll should snap back to 0 when close to 0 roll angle.");
@@ -37,14 +37,14 @@ public class PhotoModeSettings {
       TimeScaleStep = CreatePhotoModeSetting(SettingCategory.General, "Time Scale Step", 0.1f, "Step value to increase/decrease time scale when key is pressed.", max: 10);
 		
       SmoothCamera = CreatePhotoModeSetting(SettingCategory.General, "Smooth Camera", true, "Check to smooth the free-cam.");
-      PanningSmooth = CreatePhotoModeSetting(SettingCategory.General, "Camera Smooth Pan Speed", 50f, "How fast the smooth pan camera can move.");
-      PanningSmoothTime = CreatePhotoModeSetting(SettingCategory.General, "Camera Panning Smoothing Time", 1.5f, "How many seconds to smooth the camera position while panning (inertia after releasing panning keys)");
-      MaxSmoothRotationSpeed = CreatePhotoModeSetting(SettingCategory.General, "Smooth Rotation Max Speed", 5f, "How fast the smooth camera can rotate");
-      RotationSmoothDecay = CreatePhotoModeSetting(SettingCategory.General, "Smooth Rotation Decay", 0.25f, "How much to decay the rotation speed after stopping mouse movement", min: 0);
+      PanningSmooth = CreatePhotoModeSetting(SettingCategory.General, "Camera Smooth Pan Speed", 50f, "How fast the smooth pan camera can move.", 0);
+      PanningSmoothTime = CreatePhotoModeSetting(SettingCategory.General, "Camera Panning Smoothing Time", 1.5f, "How many seconds to smooth the camera position while panning (inertia after releasing panning keys)", 0);
+      MaxSmoothRotationSpeed = CreatePhotoModeSetting(SettingCategory.General, "Smooth Rotation Max Speed", 5f, "How fast the smooth camera can rotate", 0);
+      RotationSmoothDecay = CreatePhotoModeSetting(SettingCategory.General, "Smooth Rotation Decay", 0.25f, "How much to decay the rotation speed after stopping mouse movement", 0);
 		
       // dolly
       DollyEasingFunction = CreatePhotoModeSetting(SettingCategory.General, "Dolly Easing Function", Easing.Linear, "How the dolly cam transitions between states. In means start slow and end fast, out means start fast and end slow.");
-      DollyCamSpeed = CreatePhotoModeSetting(SettingCategory.General, "Dolly Cam Speed", 5f, "Speed at which the dolly cam pans/rotates");
+      DollyCamSpeed = CreatePhotoModeSetting(SettingCategory.General, "Dolly Cam Speed", 5f, "Speed at which the dolly cam pans/rotates", 0);
       NumberOfDollyPoints = CreatePhotoModeSetting(SettingCategory.General, "Dolly Path Smoothing", 50, "How many line segments to break the dolly path into to create a smooth path. Only applies when you have at least 1 checkpoint. The more points you add the slower the dolly will move.", min: 2, max: 5000, increment: 1);
       SmoothDolly = CreatePhotoModeSetting(SettingCategory.General, "Smooth Dolly Cam", true, "If the dolly cam should always be smooth (when adding at least 1 checkpoint). " +
          "This sounds good but it has a limitation: the dolly cam will always move/rotate smoothly but it will only rotate from the starting rotation to the final dolly end rotation regardless of any rotation set at each checkpoint. " +
@@ -76,8 +76,8 @@ public class PhotoModeSettings {
  
       // arc settings
       SmoothArcCamera = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc", true, "Smoothly rotate/pan around the player instead of snapping");
-      ArcPanningSmoothTime = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Panning Smooth Time", 1f, "How many seconds to smooth the camera position when the target of an arc camera moves");
-      SmoothArcCamSpeed = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc Camera Speed", 5f, "Amount of smoothing for the arc camera");
+      ArcPanningSmoothTime = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Panning Smooth Time", 1f, "How many seconds to smooth the camera position when the target of an arc camera moves", 0);
+      SmoothArcCamSpeed = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc Camera Speed", 5f, "Amount of smoothing for the arc camera", 0);
       RestrictArcPlayers = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Around Players Only", true, "Whether to arc around players or any model in the scene");
 
       // post processing
@@ -87,7 +87,7 @@ public class PhotoModeSettings {
       PostProcessFocusDistance = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focus Distance", 3.2f, "Distance to the point of focus. Adjustable on the fly with the scroll wheel", min: 0, max: 1000);
       PostProcessFocalLength = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focal Length", 50f, "Set the distance between the lens and the film. The larger the value is, the shallower the depth of field is.", min: 1, max: 300);
       PostProcessAperture = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Aperture", 5.6f, "Set the ratio of the aperture (known as f-stop or f-number). The smaller the value is, the shallower the depth of field is.", max: 64);
-      PostProcessingFocusDistanceStep = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focus Distance Step", 0.1f, "Step value to increase/decrease depth of field focus distance as you scroll");
+      PostProcessingFocusDistanceStep = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focus Distance Step", 0.1f, "Step value to increase/decrease depth of field focus distance as you scroll", 0.01f);
       PostProcessVignette = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette", false, "Enable Vignette");
 
       try {
@@ -98,8 +98,8 @@ public class PhotoModeSettings {
          // Logger.Log($"Color doesn't serialize: {e}");
       }
 
-      PostProcessVignetteIntensity = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Intensity", .35f, "Set the amount of vignetting on screen.");
-      PostProcessVignetteSmoothness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Smoothness", .5f, "Set the smoothness of the Vignette borders.");
+      PostProcessVignetteIntensity = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Intensity", .35f, "Set the amount of vignetting on screen.", 0);
+      PostProcessVignetteSmoothness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Smoothness", .5f, "Set the smoothness of the Vignette borders.", 0);
       PostProcessVignetteRoundness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Roundness", 1f, "Set the value to round the Vignette. Lower values will make a more squared vignette.");
       PostProcessVignetteRounded = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Rounded", false, "Enable this checkbox to make the vignette perfectly round. When disabled, the Vignette effect is dependent on the current aspect ratio.");
       BreakBeforeColorGrading = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Break Before Color Grading", false, "Stop applying post-process effects before color grading for exporting to external color grading");
@@ -127,7 +127,7 @@ public class PhotoModeSettings {
       return AddPhotoModeSetting(setting);
    }
 
-   private PhotoModeSetting<float> CreatePhotoModeSetting(SettingCategory category, string name, float defaultValue, string description, float min = 0.01f, float max = 100, float increment = 0.01f) {
+   private PhotoModeSetting<float> CreatePhotoModeSetting(SettingCategory category, string name, float defaultValue, string description = "", float min = 0.01f, float max = 100, float increment = 0.01f) {
       var setting = new FloatPhotoModeSetting(category, name, defaultValue, description, min, max, increment);
       return AddPhotoModeSetting(setting);
    }
