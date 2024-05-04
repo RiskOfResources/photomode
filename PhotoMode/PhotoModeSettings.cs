@@ -98,9 +98,9 @@ public class PhotoModeSettings {
          // Logger.Log($"Color doesn't serialize: {e}");
       }
 
-      PostProcessVignetteIntensity = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Intensity", .35f, "Set the amount of vignetting on screen.", 0);
-      PostProcessVignetteSmoothness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Smoothness", .5f, "Set the smoothness of the Vignette borders.", 0);
-      PostProcessVignetteRoundness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Roundness", 1f, "Set the value to round the Vignette. Lower values will make a more squared vignette.");
+      PostProcessVignetteIntensity = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Intensity", .35f, "Set the amount of vignetting on screen.", 0, 1);
+      PostProcessVignetteSmoothness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Smoothness", .5f, "Set the smoothness of the Vignette borders.", 0, 1);
+      PostProcessVignetteRoundness = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Roundness", 1f, "Set the value to round the Vignette. Lower values will make a more squared vignette.", 0, 1);
       PostProcessVignetteRounded = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Vignette Rounded", false, "Enable this checkbox to make the vignette perfectly round. When disabled, the Vignette effect is dependent on the current aspect ratio.");
       BreakBeforeColorGrading = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Break Before Color Grading", false, "Stop applying post-process effects before color grading for exporting to external color grading");
       PostProcessColorGrading = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Color Grading", false, "Enable LUT color grading (requires .cube LUT name specified)");

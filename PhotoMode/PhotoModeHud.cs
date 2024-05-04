@@ -72,10 +72,15 @@ public class PhotoModeHud : MonoBehaviour {
       if (_hudTextFadeCoroutine != null) {
          StopCoroutine(_hudTextFadeCoroutine);
       }
-      
+
+      var time = _settings.TextFadeTime.Value;
+      if (Mathf.Approximately(time, 0)) {
+         return;
+      }
+ 
       var text = _popupText.GetComponentInChildren<Text>();
       text.text = message;
-      _hudTextFadeCoroutine = FadeTextToZeroAlpha(_settings.TextFadeTime.Value , text);
+      _hudTextFadeCoroutine = FadeTextToZeroAlpha(time , text);
       StartCoroutine(_hudTextFadeCoroutine);
    }
 	
