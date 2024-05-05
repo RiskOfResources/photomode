@@ -46,6 +46,7 @@ public class PhotoModeSettings {
       DollyEasingFunction = CreatePhotoModeSetting(SettingCategory.General, "Dolly Easing Function", Easing.Linear, "How the dolly cam transitions between states. In means start slow and end fast, out means start fast and end slow.");
       DollyCamSpeed = CreatePhotoModeSetting(SettingCategory.General, "Dolly Cam Speed", 5f, "Speed at which the dolly cam pans/rotates", 0);
       NumberOfDollyPoints = CreatePhotoModeSetting(SettingCategory.General, "Dolly Path Smoothing", 50, "How many line segments to break the dolly path into to create a smooth path. Only applies when you have at least 1 checkpoint. The more points you add the slower the dolly will move.", min: 2, max: 5000, increment: 1);
+      DollyFollowsFocus = CreatePhotoModeSetting(SettingCategory.General, "Dolly Auto-Focus", false, "If the dolly should follow your focus changes.");
       SmoothDolly = CreatePhotoModeSetting(SettingCategory.General, "Smooth Dolly Cam", true, "If the dolly cam should always be smooth (when adding at least 1 checkpoint). " +
          "This sounds good but it has a limitation: the dolly cam will always move/rotate smoothly but it will only rotate from the starting rotation to the final dolly end rotation regardless of any rotation set at each checkpoint. " +
          "This means if you create a dolly path that rotates ~300 degrees the camera will likely rotate ~60 degrees to follow the shortest path to the final rotation. " +
@@ -177,6 +178,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<Easing> DollyEasingFunction;
    public readonly PhotoModeSetting<float> DollyCamSpeed;
    public readonly PhotoModeSetting<float> NumberOfDollyPoints;
+   public readonly PhotoModeSetting<bool> DollyFollowsFocus;
    public readonly PhotoModeSetting<bool> SmoothDolly;
 	
    // key bindings

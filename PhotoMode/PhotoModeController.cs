@@ -20,10 +20,10 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    public CameraRigController cameraRigController;
    private PhotoModeSettings _settings;
    private List<Transform> _players;
-   private CameraState _cameraState;
-   private static CameraState _startCamera;
-   private static CameraState _endCamera;
-   private static readonly List<CameraState> _dollyStates = new();
+   private PhotoModeCameraState _cameraState;
+   private static PhotoModeCameraState _startCamera;
+   private static PhotoModeCameraState _endCamera;
+   private static readonly List<PhotoModeCameraState> _dollyStates = new();
    private bool _recordEndPosition;
 
    private Camera Camera => cameraRigController.sceneCam;
@@ -238,7 +238,9 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       var zooming = (gamepad && inputPlayer.GetButton(9)) || Input.GetMouseButton(1);
 
       if (Mathf.Abs(scroll) > 0) {
-         _settings.PostProcessFocusDistance.Value = Mathf.Max(0, _settings.PostProcessFocusDistance.Value + scroll * _settings.PostProcessingFocusDistanceStep.Value);
+         var focusDistance = Mathf.Max(0, _settings.PostProcessFocusDistance.Value + scroll * _settings.PostProcessingFocusDistanceStep.Value);
+         _settings.PostProcessFocusDistance.Value = focusDistance;
+         _cameraState.FocusDistance = focusDistance;
          DisplayAndFadeOutText($"Focus Distance: {_settings.PostProcessFocusDistance.Value}");
       }
 
@@ -303,7 +305,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
 
       if (Input.GetKeyDown(_settings.DollyPlaybackKey.Value.MainKey)) {
          _recordEndPosition = false;
-         var dollyStates = new List<CameraState> { _startCamera };
+         var dollyStates = new List<PhotoModeCameraState> { _startCamera };
          dollyStates.AddRange(_dollyStates);
          dollyStates.Add(_endCamera);
 
@@ -454,6 +456,10 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       cameraTransform.rotation = _cameraState.rotation;
       cameraTransform.position = _cameraState.position;
       Camera.fieldOfView = _cameraState.fov;
+
+      if (_settings.DollyFollowsFocus.Value) {
+         _settings.PostProcessFocusDistance.Value = _cameraState.FocusDistance;
+      }
 		
       if (Input.GetKeyDown(_settings.NextPlayerKey.Value.MainKey) && _players.Count > 0) {
          _selectedPlayerIndex = ((_selectedPlayerIndex + 1) % _players.Count + _players.Count) % _players.Count;
@@ -568,8 +574,8 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       _natives.Clear();
    }
 
-   private IEnumerator SmoothPlayback(List<CameraState> positionCurve) {
-      List<CameraState> states = positionCurve;
+   private IEnumerator SmoothPlayback(List<PhotoModeCameraState> positionCurve) {
+      List<PhotoModeCameraState> states = positionCurve;
       var index = 0;
       var linearCamera = states[0];
       while (index < states.Count - 1) {
@@ -592,7 +598,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          linearCamera.position = Vector3.MoveTowards(linearCamera.position, nextState.position, distance);
          var linearDistance = Vector3.Distance(linearCamera.position, nextState.position);
          var movePct = (totalDistance - linearDistance) / totalDistance;
-         _cameraState = CameraState.Lerp(ref currentState, ref nextState, movePct);
+         _cameraState = PhotoModeCameraState.Lerp(ref currentState, ref nextState, movePct);
  
          if (Mathf.Approximately(linearDistance, 0)) {
             _cameraState = nextState;
@@ -606,7 +612,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       }
    }
 
-   private IEnumerator DollyPlayback(List<CameraState> dollyStates) {
+   private IEnumerator DollyPlayback(List<PhotoModeCameraState> dollyStates) {
       var dollyIndex = 0;
       var linearCamera = dollyStates[0];
 
@@ -627,7 +633,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          var movePct = (totalDistance - linearDistance) / totalDistance;
          var eased = GetEasedRatio(movePct, _settings.DollyEasingFunction.Value);
          eased = Mathf.Clamp01(eased);
-         _cameraState = CameraState.Lerp(ref currentState, ref nextState, eased);
+         _cameraState = PhotoModeCameraState.Lerp(ref currentState, ref nextState, eased);
          if (Mathf.Approximately(linearDistance, 0)) {
             _cameraState = nextState;
             dollyIndex++;

@@ -6,12 +6,12 @@ using UnityEngine;
 namespace PhotoMode;
 
 public class SmoothCurve {
-	public static List<CameraState> GenerateSmoothCurve(LineRenderer lineRenderer,
-		List<CameraState> controlPoints, int numberOfPoints, bool smoothDolly)
+	public static List<PhotoModeCameraState> GenerateSmoothCurve(LineRenderer lineRenderer,
+		List<PhotoModeCameraState> controlPoints, int numberOfPoints, bool smoothDolly)
 	{
 		Color color = Color.white;
 		float width = 0.2f;
-		var curve = new List<CameraState>();
+		var curve = new List<PhotoModeCameraState>();
 
 		if (!lineRenderer) {
 			Logger.Log("No line renderer found?");
@@ -32,23 +32,23 @@ public class SmoothCurve {
 		// loop over segments of spline
 		for(int j = 0; j < controlPoints.Count - 1; j++) {
 			// determine control points of segment
-			var p0 = controlPoints[j].position;
-			var p1 = controlPoints[j + 1].position;
+			var p0 = controlPoints[j].State.position;
+			var p1 = controlPoints[j + 1].State.position;
 
 			Vector3 m0;
 			if (j > 0) {
-				m0 = 0.5f * (controlPoints[j + 1].position - controlPoints[j - 1].position);
+				m0 = 0.5f * (controlPoints[j + 1].State.position - controlPoints[j - 1].State.position);
 			}
 			else {
-				m0 = controlPoints[j + 1].position - controlPoints[j].position;
+				m0 = controlPoints[j + 1].State.position - controlPoints[j].State.position;
 			}
 
 			Vector3 m1;
 			if (j < controlPoints.Count - 2) {
-				m1 = 0.5f * (controlPoints[j + 2].position - controlPoints[j].position);
+				m1 = 0.5f * (controlPoints[j + 2].State.position - controlPoints[j].State.position);
 			}
 			else {
-				m1 = controlPoints[j + 1].position - controlPoints[j].position;
+				m1 = controlPoints[j + 1].State.position - controlPoints[j].State.position;
 			}
 
 			// set points of Hermite curve
@@ -73,17 +73,19 @@ public class SmoothCurve {
 				// so there's no bouncing around control points
 				// when the rotation speed abruptly changes
 				if (smoothDolly) {
-					curve.Add(new CameraState() {
+					curve.Add(new PhotoModeCameraState() {
 						position = position,
 						rotation = Quaternion.Slerp(controlPoints[0].rotation, controlPoints.Last().rotation, ratio),
 						fov = Mathf.Lerp(currentState.fov, nextState.fov, (float) i / numberOfPoints),
+						FocusDistance = Mathf.Lerp(currentState.FocusDistance, nextState.FocusDistance, (float) i / numberOfPoints)
 					});
 				}
 				else {
-					curve.Add(new CameraState() {
+					curve.Add(new PhotoModeCameraState() {
 						position = position,
 						rotation = Quaternion.Slerp(currentState.rotation, nextState.rotation, (float) i / numberOfPoints),
 						fov = Mathf.Lerp(currentState.fov, nextState.fov, (float) i / numberOfPoints),
+						FocusDistance = Mathf.Lerp(currentState.FocusDistance, nextState.FocusDistance, (float) i / numberOfPoints)
 					});
 				}
 			}
