@@ -509,16 +509,6 @@ const testData = {
     "Increment": 0.01,
     "Value": false
   },
-  "DisableIndicators": {
-    "Name": "Disable Ping Indicators In Photo Mode",
-    "Category": {"Section": "General"},
-    "DefaultValue": false,
-    "Description": "Enabling this can cause indicators to not reenable again until the scene is reloaded.",
-    "Min": 0.01,
-    "Max": 100.0,
-    "Increment": 0.01,
-    "Value": false
-  },
   "TextFadeTime": {
     "Name": "Text Fade Out Time",
     "Category": {"Section": "UI"},

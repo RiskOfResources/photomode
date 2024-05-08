@@ -114,7 +114,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
 
       this.cameraRigController.hud.mainContainer.GetComponent<Canvas>().enabled = false;
 
-      SetIndicatorsVisible(settings.DisableIndicators.Value);
+      SetIndicatorsVisible(false);
       OnExit += (_, _) => SetIndicatorsVisible(true);
  
       Player inputPlayer = this.cameraRigController.localUserViewer.inputPlayer;

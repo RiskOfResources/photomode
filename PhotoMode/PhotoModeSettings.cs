@@ -108,7 +108,6 @@ public class PhotoModeSettings {
       LutName = CreatePhotoModeSetting(SettingCategory.PostProcessing, "LUT Name", "", "The name of your .cube LUT to import (full name including .cube extension)");
 		
       // other
-      DisableIndicators = CreatePhotoModeSetting(SettingCategory.General, "Disable Ping Indicators In Photo Mode", false, "Enabling this can cause indicators to not reenable again until the scene is reloaded.");
       TextFadeTime = CreatePhotoModeSetting(SettingCategory.UI, "Text Fade Out Time", 1.5f, "How long to show text before fading out", min: 0, increment: 0.1f);
       ShowHelp = CreatePhotoModeSetting(SettingCategory.UI, "Show Help Dialog", true, "Show the help dialog when entering photo mode");
       ShowDollyPath = CreatePhotoModeSetting(SettingCategory.UI, "Show Dolly Path", false, "Show the path of the dolly (mostly for debugging).");
@@ -226,7 +225,6 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> PostProcessColorGrading;
 	
    // other
-   public readonly PhotoModeSetting<bool> DisableIndicators;
    public readonly PhotoModeSetting<float> TextFadeTime;
    public readonly PhotoModeSetting<bool> ShowHelp;
    public readonly PhotoModeSetting<bool> ShowDollyPath;
