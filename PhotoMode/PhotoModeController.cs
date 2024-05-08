@@ -208,10 +208,11 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
          }
       }
       cameraRigController.hud.combatHealthBarViewer.enabled = visible;
-      PingIndicator.instancesList.ForEach(delegate(PingIndicator pingIndicator)
-      {
-         pingIndicator.gameObject.SetActive(visible);
-      });
+
+      var list = new List<PingIndicator>(PingIndicator.instancesList);
+      list.ForEach(ping => ping.gameObject.SetActive(visible));
+      PingIndicator.instancesList = list;
+
       if (!visible)
       {
          cameraRigController.sprintingParticleSystem.Clear(true);
