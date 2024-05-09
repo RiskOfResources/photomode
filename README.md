@@ -76,15 +76,17 @@ focal length. Because this isn't a real camera there's no functional difference 
 the depth of field.
 
 Default Settings
-![default settings](screenshots/default.webp)
+![default settings](media/default.webp)
 
 Shallow DOF (aperture 2.5)
-![shallow depth of field](screenshots/shallow-f-2-5.webp)
+![shallow depth of field](media/shallow-f-2-5.webp)
 
 Wide DOF (aperture 8)
-![wide depth of field](screenshots/wide-f-8.webp)
+![wide depth of field](media/wide-f-8.webp)
  
 #### Dolly camera
+![multi-point dolly shot](media/dolly.webm)
+
 Lets you set checkpoints for your camera that you can smoothly play back
 1. Press `r` to set a starting dolly position
 2. Move to another position with a rotation/roll/zoom (also focus distance if you enable dolly auto-focus in the settings)
