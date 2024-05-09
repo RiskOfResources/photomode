@@ -18,7 +18,7 @@ Important Settings overview:
 * Smooth Rotation Max Speed
   * An arbitrary value that determines how quickly the smooth camera can rotate with the mouse. Setting this to 0 would prevent all mouse movements.
   * The value is quite high by default (depending on your base camera sensitivity) so you'll see effect at or around 0.
-  * Set a value very close to 0 if you're looking for extremely smooth movements.
+  * Set a value very close to 0 if you're looking for extremely smooth movements as that will prevent abrupt changes in rotation.
 * Smooth Rotation Decay
   * How quickly the rotation slows after letting go of the mouse. Setting this to 0 means the camera will always continue rotating at the speed it was
   rotating when you let go of the mouse.
@@ -26,11 +26,25 @@ Important Settings overview:
 If you want a smoother camera than default try increasing the `Camera Panning Smoothing Time` and decreasing both the
 `Smooth Rotation Max Speed` and `Smooth Rotation Decay`. For a snappier camera do the opposite.
 
-#### Depth of field
-Depth of field with configurable:
-* Focus Distance
+#### Depth of field (blurry foreground/background)
+Allows configuring:
+* Focus Distance (adjustable via the mouse scroll wheel)
 * Focal Length
 * Aperture
+
+By default, this uses a relatively neutral "portrait" style depth of field where the subject is in focus and only background
+element rather far away are blurred. If you want a shallower depth of field you can decrease the aperture or increase the
+focal length. Because this isn't a real camera there's no functional difference to changing these settings besides modifying
+the depth of field.
+
+Default Settings
+![default settings](screenshots/default.webp)
+
+Shallow DOF (aperture 2.5)
+![shallow dof](screenshots/shallow-f-2-5.webp)
+
+Wide DOF (aperture 8)
+![wide dof](screenshots/wide-f-8.webp)
  
 #### Dolly camera
 Lets you set checkpoints for your camera that you can smoothly play back
