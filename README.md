@@ -1,3 +1,4 @@
+
 # Risk of Rain 2 Photo Mode
 ## This is an extremely complex and configurable mod for people looking to create cinematographic footage
 
@@ -88,7 +89,7 @@ Wide DOF (aperture 8)
 ![wide depth of field](media/wide-f-8.webp)
  
 #### Dolly camera
-![multi-point dolly shot](media/dolly.mp4)
+https://github.com/RiskOfResources/photomode/assets/36579598/88839fc9-2b7d-464b-8ba7-8b4ebcbf33bc
 
 Lets you set checkpoints for your camera that you can smoothly play back
 1. Press `r` to set a starting dolly position
