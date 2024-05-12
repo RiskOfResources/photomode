@@ -10,6 +10,9 @@
 
 ### Notes
 
+#### Flickering textures?
+Some things don't work well with anti-aliasing so you'll need to disable that in the post-processing settings.
+
 #### Broke your config?
 Inasmuch as we wanted to keep the mod settings flexible — and there have been a few emergent combinations of settings
 that have been used to create interesting shots — it's possible to compose settings in a way that create undesirable effects.
@@ -85,7 +88,7 @@ Wide DOF (aperture 8)
 ![wide depth of field](media/wide-f-8.webp)
  
 #### Dolly camera
-![multi-point dolly shot](media/dolly.webm)
+![multi-point dolly shot](media/dolly.mp4)
 
 Lets you set checkpoints for your camera that you can smoothly play back
 1. Press `r` to set a starting dolly position
