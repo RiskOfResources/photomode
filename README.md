@@ -3,7 +3,7 @@
 ## This is an extremely complex and configurable mod for people looking to create cinematographic footage
 
 ## How to install
-1. Go [here](https://github.com/RiskOfResources/photomode/releases) for the latest release
+1. Go [here](https://github.com/RiskOfResources/photomode/releases/latest) for the latest release
 2. Download PhotoMode.zip
 3. In the r2modman settings select "Import local mod" and choose the zip file you just downloaded.
 
