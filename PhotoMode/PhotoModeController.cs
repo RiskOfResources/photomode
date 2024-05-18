@@ -46,13 +46,15 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
    private int _selectedPlayerIndex;
    private Vector3 _arcPreviousPosition;
    private LineRenderer _lineRenderer;
+   private PhotoModeHud _photoModeHud;
 
    internal void EnterPhotoMode(PhotoModeSettings settings, CameraRigController cameraRigController) {
       _settings = settings;
       this.cameraRigController = cameraRigController;
       
       // create HUD
-      gameObject.AddComponent<PhotoModeHud>().Init(settings);
+      _photoModeHud = gameObject.AddComponent<PhotoModeHud>();
+      _photoModeHud.Init(settings);
 
       // create post-processing
       if (Camera.gameObject.TryGetComponent<PostProcessLayer>(out var postProcessLayer)) {
@@ -397,23 +399,19 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       }
       else {
          _cameraState.position += newPosition;
+         var newRotation = left * _cameraState.rotation * up;
+         var downDiff = Vector3.Angle(Vector3.down, _cameraState.rotation * Vector3.forward);
+         var upDiff = Vector3.Angle(Vector3.up, _cameraState.rotation * Vector3.forward);
+         var goingDown = upValue < 0;
+         var goingUp = upValue > 0;
+
+         if (goingDown && downDiff < 2 || goingUp && upDiff < 2 || Mathf.Approximately(newRotation.eulerAngles.z, 180)) {
+            up = Quaternion.identity;
+         }
+
          _cameraState.rotation = left * _cameraState.rotation * up;
       }
 	
-      var euler = _cameraState.rotation.eulerAngles;
-      var downDiff = Vector3.Angle(Vector3.down, _cameraState.rotation * Vector3.forward);
-      var upDiff = Vector3.Angle(Vector3.up, _cameraState.rotation * Vector3.forward);
-      var goingDown = upValue < 0;
-      var goingUp = upValue > 0;
-      var flipped = Mathf.Approximately(unrolled.z, 180);
-
-      if (goingDown && (downDiff < 2 || flipped)) {
-         _cameraState.rotation = Quaternion.Euler(88, euler.y, 0);
-      }
-      else if (goingUp && (upDiff < 2 || flipped)) {
-         _cameraState.rotation = Quaternion.Euler(272, euler.y, 0);
-      }
-
       var arcKeyDown = Input.GetKeyDown(_settings.ArcCameraKey.Value.MainKey);
       if (arcKeyDown && _settings.ToggleArcCamera.Value) {
          _isArcing = !_isArcing;
@@ -704,10 +702,8 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
 	
    private void DisplayAndFadeOutText(string message)
    {
-      var hud = GetComponent<PhotoModeHud>();
-
-      if (hud) {
-         hud.DisplayAndFadeOutText(message);
+      if (_photoModeHud) {
+         _photoModeHud.DisplayAndFadeOutText(message);
       }
       else {
          Debug.Log($"Photo Mode HUD missing? Couldn't display message {message}");
