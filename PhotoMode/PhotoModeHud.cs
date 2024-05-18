@@ -45,10 +45,10 @@ public class PhotoModeHud : MonoBehaviour {
 
       var textGo = new GameObject("PhotoModeHUD Popup Text");
       textGo.transform.SetParent(image.transform);
-      var text = textGo.AddComponent<Text>();
-      text.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-      text.color = Color.white;
-      text.lineSpacing = 1.2f;
+      _popupTextComponent = textGo.AddComponent<Text>();
+      _popupTextComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+      _popupTextComponent.color = Color.white;
+      _popupTextComponent.lineSpacing = 1.2f;
 
       _helpText = Instantiate(_popupText, _hud.transform);
       _helpText.name = "Help Text Background Image";
@@ -78,9 +78,8 @@ public class PhotoModeHud : MonoBehaviour {
          return;
       }
  
-      var text = _popupText.GetComponentInChildren<Text>();
-      text.text = message;
-      _hudTextFadeCoroutine = FadeTextToZeroAlpha(time , text);
+      _popupTextComponent.text = message;
+      _hudTextFadeCoroutine = FadeTextToZeroAlpha(time, _popupTextComponent);
       StartCoroutine(_hudTextFadeCoroutine);
    }
 	
@@ -129,6 +128,7 @@ public class PhotoModeHud : MonoBehaviour {
    }
 
    private GameObject _popupText;
+   private Text _popupTextComponent;
    private GameObject _helpText;
    private GameObject _hud;
    private PhotoModeSettings _settings;
