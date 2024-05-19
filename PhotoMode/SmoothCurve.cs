@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using RoR2;
 using UnityEngine;
 
 namespace PhotoMode;
@@ -85,7 +85,8 @@ public class SmoothCurve {
 						position = position,
 						rotation = Quaternion.Slerp(currentState.rotation, nextState.rotation, (float) i / numberOfPoints),
 						fov = Mathf.Lerp(currentState.fov, nextState.fov, (float) i / numberOfPoints),
-						FocusDistance = Mathf.Lerp(currentState.FocusDistance, nextState.FocusDistance, (float) i / numberOfPoints)
+						FocusDistance = Mathf.Lerp(currentState.FocusDistance, nextState.FocusDistance, (float) i / numberOfPoints),
+						ControlPoints = new Tuple<PhotoModeCameraState, PhotoModeCameraState>(currentState, nextState)
 					});
 				}
 			}

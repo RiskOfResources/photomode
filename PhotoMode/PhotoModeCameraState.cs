@@ -1,3 +1,4 @@
+using System;
 using RoR2;
 using UnityEngine;
 
@@ -31,4 +32,7 @@ public struct PhotoModeCameraState {
     }
 
    public float FocusDistance;
+   
+   // for multipoint dolly, so we don't lose track of the checkpoints
+   public Tuple<PhotoModeCameraState, PhotoModeCameraState> ControlPoints;
 }

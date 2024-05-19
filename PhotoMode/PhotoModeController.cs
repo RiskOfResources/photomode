@@ -604,6 +604,16 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
             index++;
          }
 
+         // if we're not using a perfectly smooth dolly we can apply the easings to smooth out rotations
+         if (!_settings.SmoothDolly.Value) {
+            var (currentControlPoint, nextControlPoint) = currentState.ControlPoints;
+            var controlPointDistance = Vector3.Distance(currentControlPoint.position, nextControlPoint.position);
+            var controlPointPct = (controlPointDistance - Vector3.Distance(linearCamera.position, nextControlPoint.position)) / controlPointDistance;
+            var eased = GetEasedRatio(controlPointPct, _settings.DollyEasingFunction.Value);
+            eased = Mathf.Clamp01(eased);
+            _cameraState.rotation = Quaternion.Slerp(currentControlPoint.rotation, nextControlPoint.rotation, eased);
+         }
+
          cameraTransform.position = _cameraState.position;
          cameraTransform.rotation = _cameraState.rotation;
          Camera.fieldOfView = _cameraState.fov;
