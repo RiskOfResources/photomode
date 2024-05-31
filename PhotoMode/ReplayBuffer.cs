@@ -64,9 +64,6 @@ public class ReplayBuffer : MonoBehaviour {
             if (request.hasError) {
                Logger.Log("GPU readback error detected.");
             }
-            else {
-               Logger.Log("saved?");
-            }
          
             grab.Release();
             flip.Release();
@@ -104,7 +101,7 @@ public class ReplayBuffer : MonoBehaviour {
             using var encoded = ImageConversion.EncodeNativeArrayToPNG(buffer, rt.graphicsFormat, (uint)rt.width, (uint)rt.height);
             File.WriteAllBytes($"{path}/recordings/frame-{i++}.png", encoded.ToArray());
             buffer.Dispose();
-            Thread.Sleep(100);
+            Thread.Sleep(33);
          }
          catch (Exception e) {
             Logger.Log($"failed to encode png {e}");
@@ -189,6 +186,12 @@ public class ReplayBuffer : MonoBehaviour {
       object IEnumerator.Current => Current;
 
       public void Dispose() {
+         foreach (var item in _buffer) {
+            if (item != null) {
+               item.Dispose();
+            }
+         }
+
          _currentIndex = -1;
       }
 
