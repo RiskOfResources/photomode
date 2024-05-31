@@ -32,7 +32,6 @@ public class ReplayBuffer : MonoBehaviour {
       _exportLinear = settings.ExportLinearColorSpace.Value;
       var framerate = settings.ReplayBufferFramerate.Value;
       _interval = 1 / framerate;
-      _natives = new RingBuffer<NativeArray<byte>>((int) (_duration * framerate));
 
       // Options.AddSaveReplayBuffer(() => {
       //    StartCoroutine(WriteFiles());
@@ -44,12 +43,14 @@ public class ReplayBuffer : MonoBehaviour {
 
    private void OnDestroy() {
       StopCoroutine(_replayBufferCoroutine);
-      foreach (NativeArray<byte> buffer in _natives) {
-         buffer.Dispose();
+
+      lock (_writeLock) {
+         _natives.Dispose();
       }
    }
 
    private IEnumerator StartReplayBuffer() {
+      _natives = new RingBuffer<NativeArray<byte>>((int) (_duration / _interval));
       while (true) {
          yield return new WaitForEndOfFrame();
          var (scale, offs) = (new Vector2(1, -1), new Vector2(0, 1));
@@ -100,7 +101,6 @@ public class ReplayBuffer : MonoBehaviour {
          try {
             using var encoded = ImageConversion.EncodeNativeArrayToPNG(buffer, rt.graphicsFormat, (uint)rt.width, (uint)rt.height);
             File.WriteAllBytes($"{path}/recordings/frame-{i++}.png", encoded.ToArray());
-            buffer.Dispose();
             Thread.Sleep(33);
          }
          catch (Exception e) {
@@ -109,12 +109,12 @@ public class ReplayBuffer : MonoBehaviour {
       }
 
       Logger.Log($"Wrote {i} files to {path}/recordings");
-      _natives.Reset();
    }
    
    
    private readonly object _writeLock = new();
    private bool _writing;
+   private bool _restartBuffer;
 
    private void LateUpdate() {
       if (Input.GetKeyDown(KeyCode.F9)) {
@@ -135,12 +135,16 @@ public class ReplayBuffer : MonoBehaviour {
                   Logger.Log($"write error {e}");
                }
 
-               _replayBufferCoroutine = StartReplayBuffer();
-               StartCoroutine(_replayBufferCoroutine);
                _writing = false;
+               _restartBuffer = true;
             });
          }
-      } 
+      }
+      else if(_restartBuffer) {
+         _restartBuffer = false;
+         _replayBufferCoroutine = StartReplayBuffer();
+         StartCoroutine(_replayBufferCoroutine);
+      }
    }
    
 
@@ -150,14 +154,13 @@ public class ReplayBuffer : MonoBehaviour {
       private int _currentIndex = -1;
 
       public void Put(T item) {
-         _endIndex++;
-         _endIndex %= _buffer.Length;
-
          if (_buffer[_endIndex] != null) {
             _buffer[_endIndex].Dispose();
          }
 
          _buffer[_endIndex] = item;
+         _endIndex++;
+         _endIndex %= _buffer.Length;
 
          // buffer full
          if (_endIndex <= _startIndex) {
