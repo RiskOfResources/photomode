@@ -115,6 +115,10 @@ public class PhotoModeSettings {
       // experimental
       DisableAllMovement = CreatePhotoModeSetting(SettingCategory.Experimental, "Disable All Camera Movement", false, "Disable movement for external control or testing.");
       ExportLinearColorSpace = CreatePhotoModeSetting(SettingCategory.Experimental, "Record linear color space", false, "When recording a RAW screen-capture should the exported images use linear or sRGB color space.");
+      EnableReplayBuffer = CreatePhotoModeSetting(SettingCategory.Experimental, "Enable Replay buffer", false, "It's a replay buffer");
+      ReplayBufferDuration = CreatePhotoModeSetting(SettingCategory.Experimental, "Replay Buffer Duration", 1f, "Number of seconds to record.");
+      ReplayBufferFramerate = CreatePhotoModeSetting(SettingCategory.Experimental, "Replay Buffer Framerate", 60f, "Rate at which to save frames.", 1f, 240f, 1f);
+      ReplayBufferResolutionScale = CreatePhotoModeSetting(SettingCategory.Experimental, "Replay Buffer Resolution Scale", 1f, "The scaling for the screen size. ", 0.1f, 4f, 0.1f);
    }
 
    private PhotoModeSetting<Color> CreatePhotoModeSetting(SettingCategory category, string name, Color defaultValue, string description = "") {
@@ -232,6 +236,10 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> DisableAllMovement;
    public readonly PhotoModeSetting<bool> ExportLinearColorSpace;
    public readonly PhotoModeSetting<string> LutName;
+   public readonly PhotoModeSetting<bool> EnableReplayBuffer;
+   public readonly PhotoModeSetting<float> ReplayBufferDuration;
+   public readonly PhotoModeSetting<float> ReplayBufferFramerate;
+   public readonly PhotoModeSetting<float> ReplayBufferResolutionScale;
 }
 
 public abstract class PhotoModeSetting {

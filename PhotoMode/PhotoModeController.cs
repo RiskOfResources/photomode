@@ -56,6 +56,9 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       _photoModeHud = gameObject.AddComponent<PhotoModeHud>();
       _photoModeHud.Init(settings);
 
+      var replayBuffer = gameObject.AddComponent<ReplayBuffer>();
+      replayBuffer.Init(settings);
+
       // create post-processing
       if (Camera.gameObject.TryGetComponent<PostProcessLayer>(out var postProcessLayer)) {
          gameObject.AddComponent<PhotoModePostProcessing>().Init(settings, postProcessLayer);
@@ -127,21 +130,6 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       if (globalPostProcess) {
          globalPostProcess.enabled = !settings.BreakBeforeColorGrading.Value;
       }
-
-      var (w, h) = (Screen.width, Screen.height);
-      if (settings.ExportLinearColorSpace.Value) {
-         _rt.grab = new RenderTexture(Screen.width, Screen.height, 24, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
-         _rt.flip = new RenderTexture(w, h, 24);
-      }
-      else {
-         _rt.grab = new RenderTexture(w, h, 24);
-         _rt.flip = new RenderTexture(w, h, 24);
-      }
- 
-      OnExit += (_, _) => {
-         Destroy(_rt.grab);
-         Destroy(_rt.flip);
-      };
    }
 
    private void OnDisable()
@@ -314,7 +302,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
 
          if (dollyStates.Count > 2) {
             var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
-            _dollyPlaybackCoroutine = SmoothPlayback(curve);
+            _dollyPlaybackCoroutine = MultiPointDollyPlayback(curve);
          }
          else {
             _dollyPlaybackCoroutine = DollyPlayback(dollyStates);
@@ -487,93 +475,7 @@ internal class PhotoModeController : MonoBehaviour, ICameraStateProvider {
       }
    }
 
-   private IEnumerator _takeSnapshot;
-   private readonly object _writeLock = new();
-   private bool _writing;
-
-   private void LateUpdate() {
-      if (Input.GetKeyDown(_settings.CaptureScreen.Value.MainKey)) {
-         if (_writing) {
-            DisplayAndFadeOutText("Still writing previous recording, try again later");
-            return;
-         }
- 
-         _takeSnapshot = TakeSnapshot();
-         StartCoroutine(_takeSnapshot);
-      } 
-      else if (Input.GetKeyUp(_settings.CaptureScreen.Value.MainKey)) {
-         if (_writing) {
-            DisplayAndFadeOutText("Still writing previous recording, try again later");
-            return;
-         }
-
-         if (_takeSnapshot != null) {
-            StopCoroutine(_takeSnapshot);
-         }
-
-         lock (_writeLock) {
-            _writing = true;
-
-            Task.Run(() => {
-               try {
-                  WriteFiles();
-               }
-               catch (Exception e) {
-                  Logger.Log($"write error {e}");
-               }
- 
-               _natives.Clear();
-               _writing = false;
-            });
-         }
-      }
-   }
-   
-
-   private List<NativeArray<byte>> _natives = new();
-   private (RenderTexture grab, RenderTexture flip) _rt;
-
-   private IEnumerator TakeSnapshot()
-   {
-      var (scale, offs) = (new Vector2(1, -1), new Vector2(0, 1));
-      while (true) {
-         yield return new WaitForEndOfFrame();
-
-         ScreenCapture.CaptureScreenshotIntoRenderTexture(_rt.grab);
-         Graphics.Blit(_rt.grab, _rt.flip, scale, offs);
-
-         var buffer = new NativeArray<byte>(Screen.width * Screen.height * 4, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-         AsyncGPUReadback.RequestIntoNativeArray(ref buffer, _rt.flip, 0, request => {
-            if (request.hasError) {
-               Logger.Log("GPU readback error detected.");
-            }
-         });
-         
-         _natives.Add(buffer);
-      }
-   }
-
-   private void WriteFiles() {
-      if (_natives.Count > 0) {
-         var path = Application.dataPath;
-         Logger.Log($"saving files to {path}");
-         if (!Directory.Exists($"{path}/recordings")) {
-            Directory.CreateDirectory($"{path}/recordings");
-         }
-
-         for (var index = 0; index < _natives.Count; index++) {
-            var buffer = _natives[index];
-            using var encoded = ImageConversion.EncodeNativeArrayToPNG(buffer, _rt.flip.graphicsFormat, (uint)_rt.flip.width, (uint)_rt.flip.height);
-            File.WriteAllBytes($"{path}/recordings/frame-{index}.png", encoded.ToArray());
-            buffer.Dispose();
-         }
-         DisplayAndFadeOutText($"Wrote {_natives.Count} files to {path}/recordings");
-      }
-         
-      _natives.Clear();
-   }
-
-   private IEnumerator SmoothPlayback(List<PhotoModeCameraState> positionCurve) {
+   private IEnumerator MultiPointDollyPlayback(List<PhotoModeCameraState> positionCurve) {
       List<PhotoModeCameraState> states = positionCurve;
       var index = 0;
       var linearCamera = states[0];
