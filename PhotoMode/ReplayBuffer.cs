@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
@@ -18,7 +17,7 @@ public class ReplayBuffer : MonoBehaviour {
 
    // timing
    private float _interval;
-   private RingBuffer<NativeArray<byte>> _natives;
+   private RingBuffer<Frame> _replayBuffer;
    private IEnumerator _replayBufferCoroutine;
  
    public void Init(PhotoModeSettings settings) {
@@ -45,43 +44,53 @@ public class ReplayBuffer : MonoBehaviour {
       StopCoroutine(_replayBufferCoroutine);
 
       lock (_writeLock) {
-         _natives.Dispose();
+         try {
+            _replayBuffer.Dispose();
+         }
+         catch (Exception e) {
+            // ignore
+            Logger.Log($"error freeing memory: {e}");
+         }
       }
    }
 
    private IEnumerator StartReplayBuffer() {
-      _natives = new RingBuffer<NativeArray<byte>>((int) (_duration / _interval));
+      _replayBuffer?.Dispose();
+      _replayBuffer = new RingBuffer<Frame>((int) (_duration / _interval));
       while (true) {
          yield return new WaitForEndOfFrame();
          var (scale, offs) = (new Vector2(1, -1), new Vector2(0, 1));
-         var (grab, flip) = (CreateRenderTexture(), CreateRenderTexture());
+         var (grab, flip) = (CreateRenderTexture(), CreateRenderTexture(_resolutionScale));
          ScreenCapture.CaptureScreenshotIntoRenderTexture(grab);
-         Graphics.Blit(grab, flip, scale * _resolutionScale, offs);
-         var size = grab.width * grab.height * 4;
+         Graphics.Blit(grab, flip, scale, offs);
+
+         var size = flip.width * flip.height * 4;
          var native = new NativeArray<byte>(size, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-         _natives.Put(native);
+         var copy = native;
  
          AsyncGPUReadback.RequestIntoNativeArray(ref native, flip, 0, request => {
             if (request.hasError) {
                Logger.Log("GPU readback error detected.");
             }
+            else {
+               _replayBuffer.Put(new Frame(false, copy));
+            }
          
-            grab.Release();
-            flip.Release();
+            RenderTexture.ReleaseTemporary(grab);
+            RenderTexture.ReleaseTemporary(flip);
          });
 
          yield return new WaitForSecondsRealtime(_interval);
       }
    }
 
-   private RenderTexture CreateRenderTexture() {
-      var (w, h) = ((int) (Screen.width * _resolutionScale), (int) (Screen.height * _resolutionScale));
+   private RenderTexture CreateRenderTexture(float scale = 1, bool temp = true) {
+      var (w, h) = ((int) (Screen.width * scale), (int) (Screen.height * scale));
       
       // TODO check if it's better to use sRGB for resolve's Unity sRGB to linear LUT
       var format = _exportLinear ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.Default;
       
-      // TODO replace with RenderTexture.GetTemporary()?
-      return new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32, format);
+      return temp ? RenderTexture.GetTemporary(w, h, 24, RenderTextureFormat.ARGB32, format) :  new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32, format);
    }
 
    private void WriteFiles() {
@@ -92,25 +101,20 @@ public class ReplayBuffer : MonoBehaviour {
       }
 
       int i = 0;
-      foreach (NativeArray<byte> buffer in _natives) {
-         if (buffer.Length == 0) {
-            continue;
-         }
-
-         var rt = CreateRenderTexture();
+      var rt = CreateRenderTexture(_resolutionScale, false);
+      foreach (Frame frame in _replayBuffer) {
          try {
-            using var encoded = ImageConversion.EncodeNativeArrayToPNG(buffer, rt.graphicsFormat, (uint)rt.width, (uint)rt.height);
+            using var encoded = ImageConversion.EncodeNativeArrayToPNG(frame.Data, rt.graphicsFormat, (uint)rt.width, (uint)rt.height);
             File.WriteAllBytes($"{path}/recordings/frame-{i++}.png", encoded.ToArray());
-            Thread.Sleep(33);
          }
          catch (Exception e) {
             Logger.Log($"failed to encode png {e}");
          }
       }
 
+      Destroy(rt);
       Logger.Log($"Wrote {i} files to {path}/recordings");
    }
-   
    
    private readonly object _writeLock = new();
    private bool _writing;
@@ -124,10 +128,10 @@ public class ReplayBuffer : MonoBehaviour {
             return;
          }
 
-         lock (_writeLock) {
-            _writing = true;
 
-            Task.Run(() => {
+         Task.Run(() => {
+            lock (_writeLock) {
+               _writing = true;
                try {
                   WriteFiles();
                }
@@ -137,8 +141,8 @@ public class ReplayBuffer : MonoBehaviour {
 
                _writing = false;
                _restartBuffer = true;
-            });
-         }
+            }
+         });
       }
       else if(_restartBuffer) {
          _restartBuffer = false;
@@ -146,10 +150,9 @@ public class ReplayBuffer : MonoBehaviour {
          StartCoroutine(_replayBufferCoroutine);
       }
    }
-   
 
    private class RingBuffer<T>(int size) : IEnumerator<T>, IEnumerable<T> where T : IDisposable {
-      private readonly T[] _buffer = new T[size];
+      private T[] _buffer = new T[size];
       private int _startIndex, _endIndex;
       private int _currentIndex = -1;
 
@@ -195,6 +198,7 @@ public class ReplayBuffer : MonoBehaviour {
             }
          }
 
+         _buffer = new T[size];
          _currentIndex = -1;
       }
 
@@ -204,6 +208,17 @@ public class ReplayBuffer : MonoBehaviour {
 
       public IEnumerator GetEnumerator() {
          return this;
+      }
+   }
+
+   private struct Frame(bool isDisposed, NativeArray<byte> data) : IDisposable {
+      public NativeArray<byte> Data { get; } = data;
+
+      public void Dispose() {
+         if (!isDisposed) {
+            Data.Dispose();
+            isDisposed = true;
+         }
       }
    }
 }
