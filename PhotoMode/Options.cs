@@ -47,9 +47,4 @@ public static class Options {
 	public static void AddWebUIAction(UnityAction action) {
 		// ModSettingsManager.AddOption(new GenericButtonOption("Open Web UI", "Experimental", action));
 	}
-	
-	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-	public static void AddSaveReplayBuffer(UnityAction action) {
-		ModSettingsManager.AddOption(new GenericButtonOption("Save Replay Buffer", SettingCategory.Experimental.Section, action));
-	}
 }
