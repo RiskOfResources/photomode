@@ -1,7 +1,7 @@
 {
   "name": "PhotoMode",
-  "version_number": "3.0.9",
-  "website_url": "",
+  "version_number": "3.0.10",
+  "website_url": "https://github.com/riskofresources/photomode",
   "description": "Photo Mode Redux. Installing Risk Of Options is highly recommended.",
   "dependencies": [
     "bbepis-BepInExPack-5.4.*",
