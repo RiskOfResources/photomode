@@ -71,7 +71,8 @@ public class PhotoModeSettings {
       ToggleSmoothCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Smooth Camera", new KeyboardShortcut(KeyCode.G));
       NextPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Previous Player", new KeyboardShortcut(KeyCode.LeftArrow));
       PrevPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Next Player", new KeyboardShortcut(KeyCode.RightArrow));
-      CaptureScreen = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Capture Screen", new KeyboardShortcut(KeyCode.None), "Records RAW textures to PNGs and saves into your Risk of Rain 2 data folder. Huge file size since it captures at 4x resolution and at your current frame rate. Limit the frame rate or change resolution to adjust.");
+      // CaptureScreen = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Capture Screen", new KeyboardShortcut(KeyCode.None), "Records RAW textures to PNGs and saves into your Risk of Rain 2 data folder. Huge file size since it captures at 4x resolution and at your current frame rate. Limit the frame rate or change resolution to adjust.");
+      SaveReplayBuffer = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Save Replay Buffer", new KeyboardShortcut(KeyCode.F9), "Save the current replay buffer as an image sequence to disk in your risk of rain 2 data/recordings folder.");
       DisplayHelpText = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Display Help Text", new KeyboardShortcut(KeyCode.H));
  
       // arc settings
@@ -115,6 +116,10 @@ public class PhotoModeSettings {
       // experimental
       DisableAllMovement = CreatePhotoModeSetting(SettingCategory.Experimental, "Disable All Camera Movement", false, "Disable movement for external control or testing.");
       ExportLinearColorSpace = CreatePhotoModeSetting(SettingCategory.Experimental, "Record linear color space", false, "When recording a RAW screen-capture should the exported images use linear or sRGB color space.");
+      EnableReplayBuffer = CreatePhotoModeSetting(SettingCategory.Experimental, "Enable Replay buffer", false, "It's a replay buffer");
+      ReplayBufferDuration = CreatePhotoModeSetting(SettingCategory.Experimental, "Replay Buffer Duration", 1f, "Number of seconds to record.");
+      ReplayBufferFramerate = CreatePhotoModeSetting(SettingCategory.Experimental, "Replay Buffer Framerate", 60f, "Rate at which to save frames.", 1f, 240f, 1f);
+      ReplayBufferResolutionScale = CreatePhotoModeSetting(SettingCategory.Experimental, "Replay Buffer Resolution Scale", 1f, "The scaling for the screen size. ", 0.1f, 4f, 0.1f);
    }
 
    private PhotoModeSetting<Color> CreatePhotoModeSetting(SettingCategory category, string name, Color defaultValue, string description = "") {
@@ -196,7 +201,8 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<KeyboardShortcut> ToggleSmoothCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> NextPlayerKey;
    public readonly PhotoModeSetting<KeyboardShortcut> PrevPlayerKey;
-   public readonly PhotoModeSetting<KeyboardShortcut> CaptureScreen;
+   // public readonly PhotoModeSetting<KeyboardShortcut> CaptureScreen;
+   public readonly PhotoModeSetting<KeyboardShortcut> SaveReplayBuffer;
    public readonly PhotoModeSetting<KeyboardShortcut> DisplayHelpText;
 	
    // arc settings
@@ -232,6 +238,10 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> DisableAllMovement;
    public readonly PhotoModeSetting<bool> ExportLinearColorSpace;
    public readonly PhotoModeSetting<string> LutName;
+   public readonly PhotoModeSetting<bool> EnableReplayBuffer;
+   public readonly PhotoModeSetting<float> ReplayBufferDuration;
+   public readonly PhotoModeSetting<float> ReplayBufferFramerate;
+   public readonly PhotoModeSetting<float> ReplayBufferResolutionScale;
 }
 
 public abstract class PhotoModeSetting {
