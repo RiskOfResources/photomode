@@ -244,13 +244,14 @@ internal class PhotoModeController : MonoBehaviour {
          var dollyStates = new List<PhotoModeCameraState> { _startCamera };
          dollyStates.AddRange(_dollyStates);
          dollyStates.Add(_endCamera);
+         var dollyService = new DollyService(_settings.SmoothDolly.Value, _camSpeed, _settings.DollyEasingFunction.Value);
 
          if (dollyStates.Count > 2) {
             var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
-            _dollyPlaybackCoroutine = MultiPointDollyPlayback(curve);
+            _dollyPlaybackCoroutine = dollyService.MultiPointDollyPlayback(curve);
          }
          else {
-            _dollyPlaybackCoroutine = DollyPlayback(dollyStates);
+            _dollyPlaybackCoroutine = dollyService.DollyPlayback(dollyStates);
          }
          StartCoroutine(_dollyPlaybackCoroutine);
          return;
@@ -453,122 +454,10 @@ internal class PhotoModeController : MonoBehaviour {
       if (_recordEndPosition) {
          _endCamera = _cameraState;
       }
- 
+
       CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
          CameraState = _cameraState
       });
-   }
-
-   private IEnumerator MultiPointDollyPlayback(List<PhotoModeCameraState> positionCurve) {
-      List<PhotoModeCameraState> states = positionCurve;
-      var index = 0;
-      var linearCamera = states[0];
-      while (index < states.Count - 1) {
-         var currentState = states[index];
-         var nextState = states[index + 1];
-         var totalDistance = Vector3.Distance(currentState.position, nextState.position);
-
-         // don't divide by 0
-         if (Mathf.Approximately(totalDistance, 0)) {
-            _cameraState = nextState;
-            index++;
-            continue;
-         }
-	
-         var distance = _camSpeed * Time.unscaledDeltaTime;
-         linearCamera.position = Vector3.MoveTowards(linearCamera.position, nextState.position, distance);
-         var linearDistance = Vector3.Distance(linearCamera.position, nextState.position);
-         var movePct = (totalDistance - linearDistance) / totalDistance;
-         _cameraState = PhotoModeCameraState.Lerp(ref currentState, ref nextState, movePct);
- 
-         if (Mathf.Approximately(linearDistance, 0)) {
-            _cameraState = nextState;
-            index++;
-         }
-
-         // if we're not using a perfectly smooth dolly we can apply the easings to smooth out rotations
-         if (!_settings.SmoothDolly.Value) {
-            var (currentControlPoint, nextControlPoint) = currentState.ControlPoints;
-            var controlPointDistance = Vector3.Distance(currentControlPoint.position, nextControlPoint.position);
-            var controlPointPct = (controlPointDistance - Vector3.Distance(linearCamera.position, nextControlPoint.position)) / controlPointDistance;
-            var eased = GetEasedRatio(controlPointPct, _settings.DollyEasingFunction.Value);
-            eased = Mathf.Clamp01(eased);
-            _cameraState.rotation = Quaternion.Slerp(currentControlPoint.rotation, nextControlPoint.rotation, eased);
-         }
-
-         CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
-            CameraState = _cameraState
-         });
-         yield return null;
-      }
- 
-      CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
-         CameraState = _cameraState
-      });
-   }
-
-   private IEnumerator DollyPlayback(List<PhotoModeCameraState> dollyStates) {
-      var dollyIndex = 0;
-      var linearCamera = dollyStates[0];
-
-      while (dollyIndex < dollyStates.Count - 1) {
-         var currentState = dollyStates[dollyIndex];
-         var nextState = dollyStates[dollyIndex + 1];
-         var totalDistance = Vector3.Distance(currentState.position, nextState.position);
-
-         // don't divide by 0
-         if (Mathf.Approximately(totalDistance, 0)) {
-            _cameraState = nextState;
-            yield break;
-         }
-			
-         var distance = _camSpeed * Time.unscaledDeltaTime;
-         linearCamera.position = Vector3.MoveTowards(linearCamera.position, nextState.position, distance);
-         var linearDistance = Vector3.Distance(linearCamera.position, nextState.position);
-         var movePct = (totalDistance - linearDistance) / totalDistance;
-         var eased = GetEasedRatio(movePct, _settings.DollyEasingFunction.Value);
-         eased = Mathf.Clamp01(eased);
-         _cameraState = PhotoModeCameraState.Lerp(ref currentState, ref nextState, eased);
-         if (Mathf.Approximately(linearDistance, 0)) {
-            _cameraState = nextState;
-            dollyIndex++;
-         }
-
-         CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
-            CameraState = _cameraState
-         });
-         yield return null;
-      }
-   }
-
-   private float GetEasedRatio(float x, Easing easing) {
-      switch (easing) {
-         case Easing.Linear:
-            return x;
-         case Easing.SineIn:
-            return 1 - (float)Math.Cos(x * Math.PI / 2);
-         case Easing.EaseInOutSine:
-            return (float)(-(Math.Cos(Math.PI * x) - 1) / 2);
-         case Easing.EaseInOutCubic:
-            return (float)(x < 0.5 ? 4 * x * x * x : 1 - Math.Pow(-2 * x + 2, 3) / 2);
-         case Easing.EaseInOutQuad:
-            return (float)(x < 0.5 ? 2 * x * x : 1 - Math.Pow(-2 * x + 2, 2) / 2);
-         case Easing.SineOut:
-            return (float)Math.Sin(x * Math.PI / 2);
-         case Easing.QuadIn:
-            return x * x;
-         case Easing.QuadOut:
-            return 1 - (1 - x) * (1 - x);
-         case Easing.CubicIn:
-            return x * x * x;
-         case Easing.CubicOut:
-            return 1 - (1 - x) * (1 - x) * (1 - x);
-         case Easing.Reverse:
-            return 1 - x;
-         default:
-            Logger.Log("Invalid easing set, falling back to linear");
-            return x;
-      }
    }
 
    private void ConditionalNegate(ref float value, bool condition)

@@ -5,16 +5,18 @@ using UnityEngine;
 namespace PhotoMode;
 
 public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
-   private static event EventHandler<PhotoModeCameraState> OnCameraStateUpdate; 
+   private static event EventHandler<CameraStateUpdateMessage> OnCameraStateUpdate; 
    private PhotoModeCameraState _cameraState;
    private bool _disableAllMovement;
+   private bool _followDollyRotation;
    private CameraRigController _cameraRigController;
 
    public PhotoModeCameraState Init(CameraRigController cameraRigController, PhotoModeSettings settings) {
+      _followDollyRotation = settings.DollyFollowRotation.Value;
+      _disableAllMovement = settings.DisableAllMovement.Value;
       _cameraRigController = cameraRigController;
       cameraRigController.SetOverrideCam(this, 0f);
       cameraRigController.enableFading = false;
-      _disableAllMovement = settings.DisableAllMovement.Value;
 
       return new PhotoModeCameraState {
          position = cameraRigController.sceneCam.transform.position,
@@ -24,15 +26,15 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
    }
  
    public static void UpdateCameraState(CameraStateUpdateMessage msg) {
-      OnCameraStateUpdate?.Invoke(null, msg.CameraState);
+      OnCameraStateUpdate?.Invoke(null, msg);
    }
 
    private void Awake() {
-      OnCameraStateUpdate += OnOnCameraStateUpdate;
+      OnCameraStateUpdate += CameraStateUpdate;
    }
 
-   private void OnOnCameraStateUpdate(object sender, PhotoModeCameraState e) {
-      _cameraState = e;
+   private void CameraStateUpdate(object sender, CameraStateUpdateMessage e) {
+      _cameraState = e.CameraState;
    }
 
    private void Update() {
@@ -46,7 +48,7 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
    }
 
    private void OnDestroy() {
-      OnCameraStateUpdate -= OnCameraStateUpdate;
+      OnCameraStateUpdate -= CameraStateUpdate;
       _cameraRigController.enableFading = true;
       _cameraRigController.SetOverrideCam(null);
       var cameraTransform = _cameraRigController.sceneCam.transform;
