@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RoR2;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace PhotoMode;
 
 public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
    private static event EventHandler<CameraStateUpdateMessage> OnCameraStateUpdate; 
-   private PhotoModeCameraState _cameraState;
+   private readonly PriorityQueue<CameraStateUpdateMessage> _cameraUpdates = new();
    private bool _disableAllMovement;
    private bool _followDollyRotation;
    private CameraRigController _cameraRigController;
@@ -34,17 +35,23 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
    }
 
    private void CameraStateUpdate(object sender, CameraStateUpdateMessage e) {
-      _cameraState = e.CameraState;
+      _cameraUpdates.Enqueue(e, e.Priority);
    }
 
    private void Update() {
       if (!_cameraRigController?.sceneCam || _disableAllMovement) {
          return;
       }
- 
-      _cameraRigController.sceneCam.transform.position = _cameraState.position;
-      _cameraRigController.sceneCam.transform.rotation = _cameraState.rotation;
-      _cameraRigController.sceneCam.fieldOfView = _cameraState.fov;
+
+      foreach (var updates in _cameraUpdates.Dequeue()) {
+         var cameraState = updates.CameraState;
+         _cameraRigController.sceneCam.transform.position = cameraState.position;
+
+         if (updates.Priority != UpdatePriority.Dolly || _followDollyRotation) {
+            _cameraRigController.sceneCam.transform.rotation = cameraState.rotation;
+         }
+         _cameraRigController.sceneCam.fieldOfView = cameraState.fov;
+      }
    }
 
    private void OnDestroy() {
@@ -73,5 +80,31 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
    public bool IsUserLookAllowed(CameraRigController _)
    {
       return false;
+   }
+
+   private class PriorityQueue<T> {
+      private readonly Queue<T>[] _queue;
+
+      public PriorityQueue() {
+         var values = Enum.GetValues(typeof(UpdatePriority));
+         _queue = new Queue<T>[values.Length];
+ 
+         foreach (var p in values) {
+            _queue[(int) p] = new Queue<T>();
+         }
+      }
+
+      public void Enqueue(T state, UpdatePriority priority) {
+         _queue[(int)priority].Enqueue(state);
+      }
+
+      public IEnumerable<T> Dequeue() {
+         foreach (var p in Enum.GetValues(typeof(UpdatePriority))) {
+            var states = _queue[(int)p];
+            if (states.Count > 0) {
+               yield return states.Dequeue();
+            }
+         }
+      }
    }
 }

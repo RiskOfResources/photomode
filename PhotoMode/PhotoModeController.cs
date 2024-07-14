@@ -30,7 +30,6 @@ internal class PhotoModeController : MonoBehaviour {
 
    private float _timeScale = 1f;
    private IEnumerator _dollyPlaybackCoroutine;
-   private float _camSpeed;
    private float _rollSum;
    private bool _isArcing;
    private Vector3 _smoothArcOffset = Vector3.zero;
@@ -40,18 +39,22 @@ internal class PhotoModeController : MonoBehaviour {
    private int _selectedPlayerIndex;
    private Vector3 _arcPreviousPosition;
    private LineRenderer _lineRenderer;
-   private PhotoModeHud _photoModeHud;
 
    internal void EnterPhotoMode(PhotoModeSettings settings, CameraRigController cameraRigController) {
       _settings = settings;
       _localUser = cameraRigController.localUserViewer;
       
       // create HUD
-      _photoModeHud = gameObject.AddComponent<PhotoModeHud>();
-      _photoModeHud.Init(settings);
+      var photoModeHud = gameObject.AddComponent<PhotoModeHud>();
+      photoModeHud.Init(settings);
 
+      // replay buffer
       var replayBuffer = gameObject.AddComponent<ReplayBuffer>();
       replayBuffer.Init(settings);
+      
+      // Camera controls
+      var cameraControl = gameObject.AddComponent<CameraControl>();
+      cameraControl.Init(settings);
 
       var camera = cameraRigController.sceneCam;
       // create post-processing
@@ -207,44 +210,15 @@ internal class PhotoModeController : MonoBehaviour {
          _cameraState.FocusDistance = focusDistance;
          DisplayAndFadeOutText($"Focus Distance: {_settings.PostProcessFocusDistance.Value}");
       }
-
-      if (_settings.DisableAllMovement.Value) {
-         return;
-      }
 	
-      if (Input.GetKeyDown(_settings.IncreaseTimeScaleKey.Value.MainKey)) {
-         Time.timeScale += _settings.TimeScaleStep.Value;
-         _timeScale = Time.timeScale;
-         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
-      }
-      else if (Input.GetKeyDown(_settings.DecreaseTimeScaleKey.Value.MainKey)) {
-         var newTime = Time.timeScale - _settings.TimeScaleStep.Value;
-         Time.timeScale = Mathf.Max(newTime, 0);
-         _timeScale = Time.timeScale;
-         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
-      }
-      else if (Input.GetKeyDown(_settings.ToggleTimePausedKey.Value.MainKey)) {
-         if (Time.timeScale > 0) {
-            Time.timeScale = 0;
-         }
-         else {
-            Time.timeScale = _timeScale;
-         }
-         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
-      }
-
-      if (Input.GetKeyDown(_settings.ToggleSmoothCameraKey.Value.MainKey)) {
-         var newSmooth = !_settings.SmoothCamera.Value;
-         _settings.SmoothCamera.Value = newSmooth;
-         DisplayAndFadeOutText($"Smooth Camera: {newSmooth}");
-      }
+      CheckTimeScaleChanged();
 
       if (Input.GetKeyDown(_settings.DollyPlaybackKey.Value.MainKey)) {
          _recordEndPosition = false;
          var dollyStates = new List<PhotoModeCameraState> { _startCamera };
          dollyStates.AddRange(_dollyStates);
          dollyStates.Add(_endCamera);
-         var dollyService = new DollyService(_settings.SmoothDolly.Value, _camSpeed, _settings.DollyEasingFunction.Value);
+         var dollyService = new DollyService(_settings.SmoothDolly.Value, _settings.DollyCamSpeed.Value, _settings.DollyEasingFunction.Value);
 
          if (dollyStates.Count > 2) {
             var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
@@ -310,15 +284,12 @@ internal class PhotoModeController : MonoBehaviour {
       var slowing = Input.GetKey(_settings.CameraSlowKey.Value.MainKey);
       var sprintMultiplier = _settings.CameraSprintMultiplier.Value;
       var slowMultiplier = _settings.CameraSlowMultiplier.Value;
-      _camSpeed = _settings.DollyCamSpeed.Value;
 
       if (sprinting) {
          val *= sprintMultiplier;
-         _camSpeed *= sprintMultiplier;
       }
       else if (slowing) {
          val *= slowMultiplier;
-         _camSpeed *= slowMultiplier;
       }
       var originalDirection = _cameraState.rotation;
       var withRollEuler = originalDirection.eulerAngles;
@@ -460,15 +431,37 @@ internal class PhotoModeController : MonoBehaviour {
       });
    }
 
+   private void CheckTimeScaleChanged() {
+      if (Input.GetKeyDown(_settings.IncreaseTimeScaleKey.Value.MainKey)) {
+         Time.timeScale += _settings.TimeScaleStep.Value;
+         _timeScale = Time.timeScale;
+         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
+      }
+      else if (Input.GetKeyDown(_settings.DecreaseTimeScaleKey.Value.MainKey)) {
+         var newTime = Time.timeScale - _settings.TimeScaleStep.Value;
+         Time.timeScale = Mathf.Max(newTime, 0);
+         _timeScale = Time.timeScale;
+         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
+      }
+      else if (Input.GetKeyDown(_settings.ToggleTimePausedKey.Value.MainKey)) {
+         if (Time.timeScale > 0) {
+            Time.timeScale = 0;
+         }
+         else {
+            Time.timeScale = _timeScale;
+         }
+         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
+      }
+   }
+
    private void ConditionalNegate(ref float value, bool condition)
    {
       value = (condition ? (0f - value) : value);
    }
 
-   private void DisplayAndFadeOutText(string message)
-   {
-      if (_photoModeHud) {
-         _photoModeHud.DisplayAndFadeOutText(message);
+   private void DisplayAndFadeOutText(string message) {
+      if (PhotoModeHud.Instance) {
+         PhotoModeHud.Instance.DisplayAndFadeOutText(message);
       }
       else {
          Logger.Log($"Photo Mode HUD missing? Couldn't display message {message}");

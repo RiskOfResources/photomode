@@ -5,7 +5,9 @@ using UnityEngine;
 
 namespace PhotoMode;
 
-public class DollyService(bool smoothDolly, float camSpeed, Easing easing) {
+public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) {
+   private float CamSpeed => CameraControl.Instance.GetCameraSpeed(dollyCamSpeed);
+
    public IEnumerator DollyPlayback(List<PhotoModeCameraState> dollyStates) {
       var dollyIndex = 0;
       var linearCamera = dollyStates[0];
@@ -20,7 +22,7 @@ public class DollyService(bool smoothDolly, float camSpeed, Easing easing) {
             yield break;
          }
 
-         var distance = camSpeed * Time.unscaledDeltaTime;
+         var distance = CamSpeed * Time.unscaledDeltaTime;
          linearCamera.position = Vector3.MoveTowards(linearCamera.position, nextState.position, distance);
          var linearDistance = Vector3.Distance(linearCamera.position, nextState.position);
          var movePct = (totalDistance - linearDistance) / totalDistance;
@@ -33,7 +35,7 @@ public class DollyService(bool smoothDolly, float camSpeed, Easing easing) {
 
          CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
             CameraState = currentState,
-            FromDolly = true
+            Priority = UpdatePriority.Dolly
          });
          yield return null;
       }
@@ -56,7 +58,7 @@ public class DollyService(bool smoothDolly, float camSpeed, Easing easing) {
             continue;
          }
 
-         var distance = camSpeed * Time.unscaledDeltaTime;
+         var distance = CamSpeed * Time.unscaledDeltaTime;
          linearCamera.position = Vector3.MoveTowards(linearCamera.position, nextState.position, distance);
          var linearDistance = Vector3.Distance(linearCamera.position, nextState.position);
          var movePct = (totalDistance - linearDistance) / totalDistance;
@@ -79,14 +81,14 @@ public class DollyService(bool smoothDolly, float camSpeed, Easing easing) {
 
          CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
             CameraState = currentState,
-            FromDolly = true
+            Priority = UpdatePriority.Dolly
          });
          yield return null;
       }
    }
 
-   private float GetEasedRatio(float x, Easing easing) {
-      switch (easing) {
+   private float GetEasedRatio(float x, Easing e) {
+      switch (e) {
          case Easing.Linear:
             return x;
          case Easing.SineIn:

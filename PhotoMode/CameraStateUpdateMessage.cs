@@ -2,5 +2,10 @@ namespace PhotoMode;
 
 public struct CameraStateUpdateMessage {
    public PhotoModeCameraState CameraState;
-   public bool FromDolly;
+   public UpdatePriority Priority;
+}
+
+public enum UpdatePriority {
+   FreeLook,
+   Dolly,
 }
