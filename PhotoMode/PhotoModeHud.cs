@@ -5,7 +5,9 @@ using UnityEngine.UI;
 
 namespace PhotoMode;
 
-public class PhotoModeHud : MonoBehaviour {
+public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
+   public static PhotoModeHud Instance;
+ 
    public void Init(PhotoModeSettings settings) {
       _settings = settings;
       // hud (with canvas)
@@ -17,7 +19,7 @@ public class PhotoModeHud : MonoBehaviour {
       Canvas canvas = _hud.AddComponent<Canvas>();
       canvas.renderMode = RenderMode.ScreenSpaceOverlay;
       _hud.AddComponent<CanvasScaler>().scaleFactor = (float)CanvasScaler.ScaleMode.ScaleWithScreenSize;
-      
+ 
       // bottom left image
       _popupText = new GameObject("Popup Text Background Image");
       _popupText.transform.SetParent(_hud.transform);
@@ -96,22 +98,16 @@ public class PhotoModeHud : MonoBehaviour {
       _popupText.SetActive(false);
    }
 
-   private void Update() {
-      if (Input.GetKeyDown(_settings.DisplayHelpText.Value.MainKey)) {
-         ToggleHelpText();
-      }
-   }
-
    private void ToggleHelpText()
    {
       var text = _helpText.GetComponentInChildren<Text>();
 
-      string message = """
-                       Pan Camera: WASD
-                       Change Roll: M3 + Mouse X
-                       Change FOV: M2 + Mouse Y
-                       Change Focus Distance: Scroll Wheel
-                       """;
+      var message = """
+                    Pan Camera: WASD
+                    Change Roll: M3 + Mouse X
+                    Change FOV: M2 + Mouse Y
+                    Change Focus Distance: Scroll Wheel
+                    """;
       foreach (var setting in _settings.Settings) {
          if(setting is PhotoModeSetting<KeyboardShortcut> keySetting) {
             message += $"\n{keySetting.Name}: {keySetting.Value.MainKey.ToString()}";
@@ -123,8 +119,19 @@ public class PhotoModeHud : MonoBehaviour {
       _helpText.SetActive(!_helpText.activeInHierarchy);
    }
 
+   private void Awake() {
+      Instance = this;
+   }
+
+   private void Update() {
+      if (Input.GetKeyDown(_settings.DisplayHelpText.Value.MainKey)) {
+         ToggleHelpText();
+      }
+   }
+
    private void OnDestroy() {
       Destroy(_hud);
+      Instance = null;
    }
 
    private GameObject _popupText;

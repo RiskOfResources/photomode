@@ -38,11 +38,13 @@ public partial class ReplayBuffer : MonoBehaviour {
    }
 
    private void OnDestroy() {
-      StopCoroutine(_replayBufferCoroutine);
+      if (_replayBufferCoroutine != null) {
+         StopCoroutine(_replayBufferCoroutine);
+      }
 
       lock (_writeLock) {
          try {
-            _replayBuffer.Dispose();
+            _replayBuffer?.Dispose();
          }
          catch (Exception e) {
             // ignore

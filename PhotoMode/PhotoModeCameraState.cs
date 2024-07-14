@@ -22,8 +22,7 @@ public struct PhotoModeCameraState {
    
     public static PhotoModeCameraState Lerp(ref PhotoModeCameraState a, ref PhotoModeCameraState b, float t)
     {
-      return new PhotoModeCameraState()
-      {
+      return new PhotoModeCameraState {
         position = Vector3.LerpUnclamped(a.position, b.position, t),
         rotation = Quaternion.SlerpUnclamped(a.rotation, b.rotation, t),
         fov = Mathf.LerpUnclamped(a.fov, b.fov, t),
