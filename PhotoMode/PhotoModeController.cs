@@ -267,7 +267,11 @@ internal class PhotoModeController : MonoBehaviour {
       ConditionalNegate(ref upValue, userProfile.mouseLookInvertY);
       var up = Quaternion.AngleAxis(upValue, Vector3.left);
       var left = Quaternion.AngleAxis(leftValue, Vector3.up);
-      var val = new Vector3(inputPlayer.GetAxis(0) * _settings.CameraPanSpeed.Value, 0f, inputPlayer.GetAxis(1) * _settings.CameraPanSpeed.Value);
+      var val = new Vector3(
+         CameraControl.Instance.GetCameraSpeed(inputPlayer.GetAxis(0) * _settings.CameraPanSpeed.Value), 
+         0f,
+         CameraControl.Instance.GetCameraSpeed(inputPlayer.GetAxis(1) * _settings.CameraPanSpeed.Value)
+      );
 
       if (val.magnitude > 0) {
          _recordEndPosition = true;
@@ -280,17 +284,6 @@ internal class PhotoModeController : MonoBehaviour {
          val.y += _settings.CameraElevationSpeed.Value;
       }
 
-      var sprinting = Input.GetKey(_settings.CameraSprintKey.Value.MainKey);
-      var slowing = Input.GetKey(_settings.CameraSlowKey.Value.MainKey);
-      var sprintMultiplier = _settings.CameraSprintMultiplier.Value;
-      var slowMultiplier = _settings.CameraSlowMultiplier.Value;
-
-      if (sprinting) {
-         val *= sprintMultiplier;
-      }
-      else if (slowing) {
-         val *= slowMultiplier;
-      }
       var originalDirection = _cameraState.rotation;
       var withRollEuler = originalDirection.eulerAngles;
       var unrolled = left * Quaternion.Euler(withRollEuler.x, withRollEuler.y, 0) * up;
