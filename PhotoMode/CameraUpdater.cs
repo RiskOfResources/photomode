@@ -38,7 +38,7 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
       _cameraUpdates.Enqueue(e, e.Priority);
    }
 
-   private void Update() {
+   private void LateUpdate() {
       if (!_cameraRigController?.sceneCam || _disableAllMovement) {
          return;
       }
@@ -51,6 +51,7 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
             _cameraRigController.sceneCam.transform.rotation = cameraState.rotation;
          }
          _cameraRigController.sceneCam.fieldOfView = cameraState.fov;
+         _cameraRigController.currentCameraState.fov = cameraState.fov;
       }
    }
 

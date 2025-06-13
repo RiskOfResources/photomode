@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using R2API.Utils;
 using RoR2;
 using RoR2.UI;
@@ -8,7 +9,7 @@ using UnityEngine.UI;
 
 namespace PhotoMode;
 
-[BepInPlugin("com.riskofresources.discohatesme.photomode", "PhotoMode", "3.0.11")]
+[BepInPlugin("com.riskofresources.discohatesme.photomode", "PhotoMode", "3.1.0")]
 [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
 [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
 public class PhotoModePlugin : BaseUnityPlugin
@@ -18,7 +19,13 @@ public class PhotoModePlugin : BaseUnityPlugin
 	private WebService _webService;
 
 	public void Awake() {
-		_settings = new PhotoModeSettings(Config, Info.Location);
+		try {
+			_settings = new PhotoModeSettings(Config, Info.Location);
+		}
+		catch (Exception e) {
+			Logger.LogWarning($"Failed to create settings PhotoMode may not work properly: {e}");
+		}
+		
 		_webService = new WebService(_settings);
 
 		On.RoR2.CameraRigController.OnEnable += OnCameraRigControllerOnOnEnable;
@@ -53,7 +60,7 @@ public class PhotoModePlugin : BaseUnityPlugin
 		var buttonGameObject = buttonSkinController.gameObject;
 		var photoModeButton = Instantiate(buttonGameObject, buttonGameObject.transform.parent);
 		photoModeButton.name = "GenericMenuButton (Photo mode)";
-		photoModeButton.transform.SetSiblingIndex(1);
+		photoModeButton.transform.SetSiblingIndex(2);
 		if (photoModeButton.TryGetComponent<LanguageTextMeshController>(out var languageTextMeshController)) {
 			languageTextMeshController.token = "Photo mode";
 		}

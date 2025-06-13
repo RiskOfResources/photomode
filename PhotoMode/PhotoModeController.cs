@@ -39,6 +39,7 @@ internal class PhotoModeController : MonoBehaviour {
    private int _selectedPlayerIndex;
    private Vector3 _arcPreviousPosition;
    private LineRenderer _lineRenderer;
+   private bool _initialEnter = true;
 
    internal void EnterPhotoMode(PhotoModeSettings settings, CameraRigController cameraRigController) {
       _settings = settings;
@@ -80,10 +81,10 @@ internal class PhotoModeController : MonoBehaviour {
          _players = modelLocators != null ? modelLocators.Select(m => m.transform).ToList() : new List<Transform>();
       }
       Logger.Log("Entering photo mode");
-      
-      OnExit += (_, _) => Time.timeScale = _timeScale;
+
+      var originalTimeScale = _timeScale;
+      OnExit += (_, _) => Time.timeScale = originalTimeScale;
       _timeScale = Time.timeScale;
-      Time.timeScale = 0f;
  
       var enableDamageNumbers = SettingsConVars.enableDamageNumbers.value;
       SettingsConVars.enableDamageNumbers.SetBool(false);
@@ -96,9 +97,13 @@ internal class PhotoModeController : MonoBehaviour {
       };
 
       cameraRigController.hud.mainContainer.GetComponent<Canvas>().enabled = false;
-
+      var isCutscene = cameraRigController.isCutscene;
+      cameraRigController.isCutscene = true;
       SetIndicatorsVisible(false, cameraRigController);
-      OnExit += (_, _) => SetIndicatorsVisible(true, cameraRigController);
+      OnExit += (_, _) => {
+         SetIndicatorsVisible(true, cameraRigController);
+         cameraRigController.isCutscene = isCutscene;
+      };
  
       Player inputPlayer = cameraRigController.localUserViewer.inputPlayer;
       inputPlayer.controllers.AddLastActiveControllerChangedDelegate(OnLastActiveControllerChanged);
@@ -197,6 +202,12 @@ internal class PhotoModeController : MonoBehaviour {
          return;
       }
 
+      // hack
+      if (_initialEnter) {
+         _initialEnter = false;
+         Time.timeScale = 0f;
+      }
+
       float xAxis = inputPlayer.GetAxisRaw(2);
       float yAxis = inputPlayer.GetAxisRaw(3);
       var sensitivity = _settings.CameraSensitivity.Value;
@@ -278,10 +289,10 @@ internal class PhotoModeController : MonoBehaviour {
       }
 		
       if ((gamepad && inputPlayer.GetButton(7)) || Input.GetKey(_settings.LowerCameraKey.Value.MainKey)) {
-         val.y -= _settings.CameraElevationSpeed.Value;
+         val.y -= CameraControl.Instance.GetCameraSpeed(_settings.CameraElevationSpeed.Value);
       }
       else if ((gamepad && inputPlayer.GetButton(8)) || Input.GetKey(_settings.RaiseCameraKey.Value.MainKey)) {
-         val.y += _settings.CameraElevationSpeed.Value;
+         val.y += CameraControl.Instance.GetCameraSpeed(_settings.CameraElevationSpeed.Value);
       }
 
       var originalDirection = _cameraState.rotation;
@@ -428,13 +439,13 @@ internal class PhotoModeController : MonoBehaviour {
       if (Input.GetKeyDown(_settings.IncreaseTimeScaleKey.Value.MainKey)) {
          Time.timeScale += _settings.TimeScaleStep.Value;
          _timeScale = Time.timeScale;
-         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
+         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale:F2}");
       }
       else if (Input.GetKeyDown(_settings.DecreaseTimeScaleKey.Value.MainKey)) {
          var newTime = Time.timeScale - _settings.TimeScaleStep.Value;
          Time.timeScale = Mathf.Max(newTime, 0);
          _timeScale = Time.timeScale;
-         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
+         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale:F2}");
       }
       else if (Input.GetKeyDown(_settings.ToggleTimePausedKey.Value.MainKey)) {
          if (Time.timeScale > 0) {
@@ -443,7 +454,7 @@ internal class PhotoModeController : MonoBehaviour {
          else {
             Time.timeScale = _timeScale;
          }
-         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale}");
+         DisplayAndFadeOutText($"Current Time Scale: {Time.timeScale:F2}");
       }
    }
 

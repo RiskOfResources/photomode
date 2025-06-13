@@ -1,3 +1,5 @@
+using System;
+using On.RoR2.UI;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -5,9 +7,10 @@ namespace PhotoMode;
 
 public class PhotoModePostProcessing : MonoBehaviour {
    private PhotoModeSettings _settings;
+   private static GameObject _postProcessGameObject;
+   private DepthOfField _depthOfField;
    private PostProcessVolume _quickVolume;
    private Vignette _vignette;
-   private DepthOfField _depthOfField;
    private Texture3D _lutRef;
    private bool _basePostProcessingEnabled;
    private PostProcessLayer.Antialiasing _antiAliasing;
@@ -17,7 +20,19 @@ public class PhotoModePostProcessing : MonoBehaviour {
       _settings = settings;
       _postProcessLayer = postProcessLayer;
       var postProcessingEnabled = settings.PostProcessing.Value;
-      
+ 
+      // use global post process layer
+      var layer = LayerMask.NameToLayer("PostProcess");
+      layer = layer == -1 ? 20 : layer;
+
+      if (_postProcessGameObject == null) {
+         _postProcessGameObject = new GameObject("Photo Mode Post Processing") {
+            name = "Photo Mode Post Processing",
+            layer = layer,
+            hideFlags = HideFlags.HideAndDontSave
+         };
+      }
+ 
       // vignette
       _vignette = ScriptableObject.CreateInstance<Vignette>();
       _vignette.enabled.value = postProcessingEnabled && settings.PostProcessVignette.Value;
@@ -46,24 +61,23 @@ public class PhotoModePostProcessing : MonoBehaviour {
             colorGrading.gradingMode.Override(GradingMode.External);
          }
       }
-      
-      // anti-aliasing
-      _antiAliasing = postProcessLayer.antialiasingMode;
-      postProcessLayer.antialiasingMode = settings.PostProcessingAntiAliasing.Value ? PostProcessLayer.Antialiasing.TemporalAntialiasing : PostProcessLayer.Antialiasing.None;
-      _basePostProcessingEnabled = postProcessLayer.enabled;
-      postProcessLayer.enabled = true;
-      
-      // use global post process layer
-      var layer = LayerMask.NameToLayer("PostProcess");
-      layer = layer == -1 ? 20 : layer;
-      _quickVolume = PostProcessManager.instance.QuickVolume(layer, 1000f, _vignette, _depthOfField, colorGrading);
+
+      _postProcessGameObject.TryGetComponent(out _quickVolume);
+      if (!_quickVolume) {
+         _quickVolume = _postProcessGameObject.AddComponent<PostProcessVolume>();
+      }
+ 
+      _quickVolume.priority = 1000;
+      PostProcessProfile profile = _quickVolume.profile;
+      profile.AddSettings(_depthOfField);
       _quickVolume.isGlobal = true;
       _quickVolume.weight = 1;
       _quickVolume.enabled = settings.PostProcessing.Value;
    }
 
    private void Update() {
-      if (_settings.PostProcessing.Value && _postProcessLayer) {
+      if (_settings.PostProcessing.Value) {
+         _quickVolume.enabled = false;
          _depthOfField.enabled.Override(_settings.PostProcessDepth.Value);
          _depthOfField.focusDistance.Override(_settings.PostProcessFocusDistance.Value);
          _depthOfField.focalLength.Override(_settings.PostProcessFocalLength.Value);
@@ -74,7 +88,8 @@ public class PhotoModePostProcessing : MonoBehaviour {
          _vignette.smoothness.Override(_settings.PostProcessVignetteSmoothness.Value);
          _vignette.roundness.Override(_settings.PostProcessVignetteRoundness.Value);
          _vignette.rounded.Override(_settings.PostProcessVignetteRounded.Value);
-         _postProcessLayer.antialiasingMode = _settings.PostProcessingAntiAliasing.Value ? PostProcessLayer.Antialiasing.TemporalAntialiasing : PostProcessLayer.Antialiasing.None;
+         _postProcessLayer.antialiasingMode = _settings.PostProcessingAntiAliasing.Value ? PostProcessLayer.Antialiasing.FastApproximateAntialiasing : PostProcessLayer.Antialiasing.None;
+         _quickVolume.enabled = true;
       }
       else {
          _postProcessLayer.enabled = false;
@@ -82,8 +97,7 @@ public class PhotoModePostProcessing : MonoBehaviour {
    }
 
    private void OnDestroy() {
-      RuntimeUtilities.DestroyVolume(_quickVolume, true, true);
-      _postProcessLayer.enabled = _basePostProcessingEnabled;
-      _postProcessLayer.antialiasingMode = _antiAliasing;
+      // don't destroy: something is holding a reference to the volumes and throws an NRE
+      _quickVolume.enabled = false;
    }
 }
