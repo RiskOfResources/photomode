@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <AssemblyName>PhotoMode</AssemblyName>
         <Description>Photo Mode Mod</Description>
-        <Version>3.1.0</Version>
+        <Version>3.1.1</Version>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 

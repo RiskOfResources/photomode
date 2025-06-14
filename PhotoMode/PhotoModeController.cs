@@ -82,10 +82,6 @@ internal class PhotoModeController : MonoBehaviour {
       }
       Logger.Log("Entering photo mode");
 
-      var originalTimeScale = _timeScale;
-      OnExit += (_, _) => Time.timeScale = originalTimeScale;
-      _timeScale = Time.timeScale;
- 
       var enableDamageNumbers = SettingsConVars.enableDamageNumbers.value;
       SettingsConVars.enableDamageNumbers.SetBool(false);
       var showExpMoney = SettingsConVars.cvExpAndMoneyEffects.value;

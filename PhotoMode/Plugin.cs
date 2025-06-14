@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace PhotoMode;
 
-[BepInPlugin("com.riskofresources.discohatesme.photomode", "PhotoMode", "3.1.0")]
+[BepInPlugin("com.riskofresources.discohatesme.photomode", "PhotoMode", "3.1.1")]
 [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
 [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
 public class PhotoModePlugin : BaseUnityPlugin
@@ -71,18 +71,20 @@ public class PhotoModePlugin : BaseUnityPlugin
 			return;
 		}
 	
+		// time scale before pausing
+		var timeScale = Time.timeScale;
 		component.interactable = cameraRigController && cameraRigController.localUserViewer != null;
 		component.onClick = new Button.ButtonClickedEvent();
 		component.onClick.AddListener(() => {
 			pauseScreenController.gameObject.SetActive(false);
-			EnterPhotoMode();
+			var pmGo = new GameObject("PhotoModeController");
+			pmGo.SetActive(false);
+			var controller = pmGo.AddComponent<PhotoModeController>();
+			controller.OnExit += (_, _) => Time.timeScale = timeScale;
+			controller.EnterPhotoMode(_settings, cameraRigController);
+			Time.timeScale = 0;
+			pmGo.SetActive(true);
 		});
-	}
-
-	private void EnterPhotoMode() {
-		var pmGo = new GameObject("PhotoModeController");
-		var controller = pmGo.AddComponent<PhotoModeController>();
-		controller.EnterPhotoMode(_settings, cameraRigController);
 	}
 
 	private void OnPauseScreenControllerOnAwake(On.RoR2.UI.PauseScreenController.orig_Awake orig, PauseScreenController self) {
