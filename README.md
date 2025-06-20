@@ -10,6 +10,12 @@
 Certain features will not work without it installed.
 
 ### Notes
+#### DebugToolkit PageUp Key Conflict
+[Debug Toolkit](https://thunderstore.io/package/IHarbHD/DebugToolkit/) v3.20.0  added a feature to toggle the console
+with `PageUp` by default which conflicts with the PhotoMode time scale keybinding. To disable this behavior either
+set the `Console Key` in the DebugToolkit config to `None` or change the `Increase Time Scale` key binding in the PhotoMode
+config file or RiskOfOption UI.
+
 #### Flickering textures?
 Some things don't work well with anti-aliasing so you'll need to disable that in the post-processing settings.
 
