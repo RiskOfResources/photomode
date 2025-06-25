@@ -1,5 +1,3 @@
-using System;
-using On.RoR2.UI;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -12,7 +10,6 @@ public class PhotoModePostProcessing : MonoBehaviour {
    private PostProcessVolume _quickVolume;
    private Vignette _vignette;
    private Texture3D _lutRef;
-   private bool _basePostProcessingEnabled;
    private PostProcessLayer.Antialiasing _antiAliasing;
    private PostProcessLayer _postProcessLayer;
 
@@ -92,7 +89,7 @@ public class PhotoModePostProcessing : MonoBehaviour {
          _quickVolume.enabled = true;
       }
       else {
-         _postProcessLayer.enabled = false;
+         _quickVolume.enabled = false;
       }
    }
 

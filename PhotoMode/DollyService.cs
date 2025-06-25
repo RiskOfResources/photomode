@@ -33,10 +33,7 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
             dollyIndex++;
          }
 
-         CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
-            CameraState = currentState,
-            Priority = UpdatePriority.Dolly
-         });
+         UpdateCamera(currentState);
          yield return null;
       }
    }
@@ -53,7 +50,6 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
 
          // don't divide by 0
          if (Mathf.Approximately(totalDistance, 0)) {
-            Debug.Log(2 + index);
             index++;
             continue;
          }
@@ -79,12 +75,16 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
             currentState.rotation = Quaternion.Slerp(currentControlPoint.rotation, nextControlPoint.rotation, eased);
          }
 
-         CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
-            CameraState = currentState,
-            Priority = UpdatePriority.Dolly
-         });
+         UpdateCamera(currentState);
          yield return null;
       }
+   }
+
+   private void UpdateCamera(PhotoModeCameraState currentState) {
+      CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
+         CameraState = currentState,
+         Priority = UpdatePriority.Dolly
+      });
    }
 
    private float GetEasedRatio(float x, Easing e) {

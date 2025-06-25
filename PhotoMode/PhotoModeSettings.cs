@@ -75,6 +75,8 @@ public class PhotoModeSettings {
       // CaptureScreen = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Capture Screen", new KeyboardShortcut(KeyCode.None), "Records RAW textures to PNGs and saves into your Risk of Rain 2 data folder. Huge file size since it captures at 4x resolution and at your current frame rate. Limit the frame rate or change resolution to adjust.");
       SaveReplayBuffer = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Save Replay Buffer", new KeyboardShortcut(KeyCode.F9), "Save the current replay buffer as an image sequence to disk in your risk of rain 2 data/recordings folder.");
       DisplayHelpText = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Display Help Text", new KeyboardShortcut(KeyCode.H));
+      ScrollWheelModifierKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Scroll Wheel Modifier", new KeyboardShortcut(KeyCode.LeftAlt), "Hold while scrolling to change the focal length instead of the focus distance.");
+      ScrollWheelApertureModifierKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Scroll Wheel Aperture Modifier", new KeyboardShortcut(KeyCode.LeftAlt, KeyCode.LeftShift), "Hold while scrolling to change the aperture instead of the focus distance.");
  
       // arc settings
       ToggleArcCamera = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Toggle Arc Camera", false, "True to toggle arc camera on keypress instead of needing to hold the button.");
@@ -199,6 +201,8 @@ public class PhotoModeSettings {
    // public readonly PhotoModeSetting<KeyboardShortcut> CaptureScreen;
    public readonly PhotoModeSetting<KeyboardShortcut> SaveReplayBuffer;
    public readonly PhotoModeSetting<KeyboardShortcut> DisplayHelpText;
+   public readonly PhotoModeSetting<KeyboardShortcut> ScrollWheelModifierKey;
+   public readonly PhotoModeSetting<KeyboardShortcut> ScrollWheelApertureModifierKey;
 
    // arc settings
    public readonly PhotoModeSetting<bool> ToggleArcCamera;

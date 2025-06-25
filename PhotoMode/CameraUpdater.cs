@@ -10,11 +10,15 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
    private readonly PriorityQueue<CameraStateUpdateMessage> _cameraUpdates = new();
    private bool _disableAllMovement;
    private bool _followDollyRotation;
+   private bool _autoFocus;
+   private PhotoModeSettings _settings;
    private CameraRigController _cameraRigController;
 
    public PhotoModeCameraState Init(CameraRigController cameraRigController, PhotoModeSettings settings) {
+      _settings = settings;
       _followDollyRotation = settings.DollyFollowRotation.Value;
       _disableAllMovement = settings.DisableAllMovement.Value;
+      _autoFocus = settings.DollyFollowsFocus.Value;
       _cameraRigController = cameraRigController;
       cameraRigController.SetOverrideCam(this, 0f);
       cameraRigController.enableFading = false;
@@ -22,7 +26,8 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
       return new PhotoModeCameraState {
          position = cameraRigController.sceneCam.transform.position,
          rotation = Quaternion.LookRotation(cameraRigController.sceneCam.transform.rotation * Vector3.forward),
-         fov = cameraRigController.sceneCam.fieldOfView
+         fov = cameraRigController.sceneCam.fieldOfView,
+         FocusDistance = _settings.PostProcessFocusDistance.Value,
       };
    }
  
@@ -50,6 +55,11 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
          if (updates.Priority != UpdatePriority.Dolly || _followDollyRotation) {
             _cameraRigController.sceneCam.transform.rotation = cameraState.rotation;
          }
+
+         if (updates.Priority != UpdatePriority.Dolly || _autoFocus) {
+            _settings.PostProcessFocusDistance.Value = cameraState.FocusDistance;
+         }
+ 
          _cameraRigController.sceneCam.fieldOfView = cameraState.fov;
          _cameraRigController.currentCameraState.fov = cameraState.fov;
       }

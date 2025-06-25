@@ -39,7 +39,6 @@ internal class PhotoModeController : MonoBehaviour {
    private int _selectedPlayerIndex;
    private Vector3 _arcPreviousPosition;
    private LineRenderer _lineRenderer;
-   private bool _initialEnter = true;
 
    internal void EnterPhotoMode(PhotoModeSettings settings, CameraRigController cameraRigController) {
       _settings = settings;
@@ -198,12 +197,6 @@ internal class PhotoModeController : MonoBehaviour {
          return;
       }
 
-      // hack
-      if (_initialEnter) {
-         _initialEnter = false;
-         Time.timeScale = 0f;
-      }
-
       float xAxis = inputPlayer.GetAxisRaw(2);
       float yAxis = inputPlayer.GetAxisRaw(3);
       var sensitivity = _settings.CameraSensitivity.Value;
@@ -212,10 +205,21 @@ internal class PhotoModeController : MonoBehaviour {
 
       float scroll = Input.mouseScrollDelta.y;
       if (Mathf.Abs(scroll) > 0) {
-         var focusDistance = Mathf.Max(0, _settings.PostProcessFocusDistance.Value + scroll * _settings.PostProcessingFocusDistanceStep.Value);
-         _settings.PostProcessFocusDistance.Value = focusDistance;
-         _cameraState.FocusDistance = focusDistance;
-         DisplayAndFadeOutText($"Focus Distance: {_settings.PostProcessFocusDistance.Value}");
+         if (_settings.ScrollWheelModifierKey.Value.IsPressed()) {
+               var focalLength = Math.Max(0, _settings.PostProcessFocalLength.Value + scroll);
+               _settings.PostProcessFocalLength.Value = focalLength;
+               DisplayAndFadeOutText($"Focal Length: {focalLength}mm");
+         }
+         else if (_settings.ScrollWheelApertureModifierKey.Value.IsPressed()) {
+            var aperture = Math.Max(0, _settings.PostProcessAperture.Value + scroll * 0.1f);
+            _settings.PostProcessAperture.Value = aperture;
+            DisplayAndFadeOutText($"Aperture: f/{aperture:F1}");
+         }
+         else {
+            var focusDistance = Math.Max(0, _settings.PostProcessFocusDistance.Value + scroll * _settings.PostProcessingFocusDistanceStep.Value);
+            _cameraState.FocusDistance = focusDistance;
+            DisplayAndFadeOutText($"Focus Distance: {focusDistance}");
+         }
       }
 	
       CheckTimeScaleChanged();
@@ -394,10 +398,6 @@ internal class PhotoModeController : MonoBehaviour {
          }
 
          _cameraState.rotation = rotation;
-      }
-	
-      if (_settings.DollyFollowsFocus.Value) {
-         _settings.PostProcessFocusDistance.Value = _cameraState.FocusDistance;
       }
 		
       if (Input.GetKeyDown(_settings.NextPlayerKey.Value.MainKey) && _players.Count > 0) {

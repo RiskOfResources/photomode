@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using BepInEx;
 using R2API.Utils;
 using RoR2;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 
 namespace PhotoMode;
 
-[BepInPlugin("com.riskofresources.discohatesme.photomode", "PhotoMode", "3.1.1")]
+[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
 [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
 public class PhotoModePlugin : BaseUnityPlugin
@@ -20,7 +21,7 @@ public class PhotoModePlugin : BaseUnityPlugin
 
 	public void Awake() {
 		try {
-			_settings = new PhotoModeSettings(Config, Info.Location);
+			_settings ??= new PhotoModeSettings(Config, Info.Location);
 		}
 		catch (Exception e) {
 			Logger.LogWarning($"Failed to create settings PhotoMode may not work properly: {e}");
@@ -82,8 +83,13 @@ public class PhotoModePlugin : BaseUnityPlugin
 			var controller = pmGo.AddComponent<PhotoModeController>();
 			controller.OnExit += (_, _) => Time.timeScale = timeScale;
 			controller.EnterPhotoMode(_settings, cameraRigController);
-			Time.timeScale = 0;
 			pmGo.SetActive(true);
+			StartCoroutine(PauseAtEndOfFrame());
+
+			IEnumerator PauseAtEndOfFrame() {
+				yield return new WaitForEndOfFrame();
+				Time.timeScale = 0;
+			}
 		});
 	}
 

@@ -71,6 +71,11 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
 
    public void DisplayAndFadeOutText(string message)
    {
+      // if the help text is disabled don't show the popup either
+      if (!_settings.ShowHelp.Value) {
+         return;
+      }
+ 
       if (_hudTextFadeCoroutine != null) {
          StopCoroutine(_hudTextFadeCoroutine);
       }
@@ -116,7 +121,7 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
 
       message += "\n\nYou can disable this showing by default in settings";
       text.text = message;
-      _helpText.SetActive(!_helpText.activeInHierarchy);
+      _helpText.SetActive(!_helpText.activeSelf);
    }
 
    private void Awake() {
