@@ -106,7 +106,7 @@ public class PhotoModeSettings {
       
       // other
       TextFadeTime = CreatePhotoModeSetting(SettingCategory.UI, "Text Fade Out Time", 1.5f, "How long to show text before fading out", min: 0, increment: 0.1f);
-      ShowHudByDefault = CreatePhotoModeSetting(SettingCategory.UI, "Show Hud", true, "Show the photo mode HUD");
+      ShowHudByDefault = CreatePhotoModeSetting(SettingCategory.UI, "Show HUD", true, "Show the photo mode HUD");
       ShowDollyPath = CreatePhotoModeSetting(SettingCategory.UI, "Show Dolly Path", false, "Show the path of the dolly (mostly for debugging).");
       
       // experimental
