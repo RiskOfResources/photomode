@@ -74,7 +74,7 @@ public class PhotoModeSettings {
       PrevPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Next Player", new KeyboardShortcut(KeyCode.RightArrow));
       // CaptureScreen = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Capture Screen", new KeyboardShortcut(KeyCode.None), "Records RAW textures to PNGs and saves into your Risk of Rain 2 data folder. Huge file size since it captures at 4x resolution and at your current frame rate. Limit the frame rate or change resolution to adjust.");
       SaveReplayBuffer = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Save Replay Buffer", new KeyboardShortcut(KeyCode.F9), "Save the current replay buffer as an image sequence to disk in your risk of rain 2 data/recordings folder.");
-      DisplayHelpText = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Display Help Text", new KeyboardShortcut(KeyCode.H));
+      ToggleHud = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle HUD visibility", new KeyboardShortcut(KeyCode.H));
       ScrollWheelModifierKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Scroll Wheel Modifier", new KeyboardShortcut(KeyCode.LeftAlt), "Hold while scrolling to change the focal length instead of the focus distance.");
       ScrollWheelApertureModifierKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Scroll Wheel Aperture Modifier", new KeyboardShortcut(KeyCode.LeftAlt, KeyCode.LeftShift), "Hold while scrolling to change the aperture instead of the focus distance.");
  
@@ -106,7 +106,7 @@ public class PhotoModeSettings {
       
       // other
       TextFadeTime = CreatePhotoModeSetting(SettingCategory.UI, "Text Fade Out Time", 1.5f, "How long to show text before fading out", min: 0, increment: 0.1f);
-      ShowHelp = CreatePhotoModeSetting(SettingCategory.UI, "Show Help Dialog", true, "Show the help dialog when entering photo mode");
+      ShowHudByDefault = CreatePhotoModeSetting(SettingCategory.UI, "Show Hud", true, "Show the photo mode HUD");
       ShowDollyPath = CreatePhotoModeSetting(SettingCategory.UI, "Show Dolly Path", false, "Show the path of the dolly (mostly for debugging).");
       
       // experimental
@@ -200,7 +200,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<KeyboardShortcut> PrevPlayerKey;
    // public readonly PhotoModeSetting<KeyboardShortcut> CaptureScreen;
    public readonly PhotoModeSetting<KeyboardShortcut> SaveReplayBuffer;
-   public readonly PhotoModeSetting<KeyboardShortcut> DisplayHelpText;
+   public readonly PhotoModeSetting<KeyboardShortcut> ToggleHud;
    public readonly PhotoModeSetting<KeyboardShortcut> ScrollWheelModifierKey;
    public readonly PhotoModeSetting<KeyboardShortcut> ScrollWheelApertureModifierKey;
 
@@ -231,7 +231,7 @@ public class PhotoModeSettings {
 
    // other
    public readonly PhotoModeSetting<float> TextFadeTime;
-   public readonly PhotoModeSetting<bool> ShowHelp;
+   public readonly PhotoModeSetting<bool> ShowHudByDefault;
    public readonly PhotoModeSetting<bool> ShowDollyPath;
    public readonly PhotoModeSetting<bool> DisableAllMovement;
    public readonly PhotoModeSetting<bool> ExportLinearColorSpace;

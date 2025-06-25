@@ -41,6 +41,7 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
 
    private void CameraStateUpdate(object sender, CameraStateUpdateMessage e) {
       _cameraUpdates.Enqueue(e, e.Priority);
+      PhotoModeHud.Instance.ShowCameraStatus(e.CameraState);
    }
 
    private void LateUpdate() {

@@ -23,7 +23,6 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
       // bottom left image
       _popupText = new GameObject("Popup Text Background Image");
       _popupText.transform.SetParent(_hud.transform);
-      _popupText.SetActive(false);
 
       var imageLayout = _popupText.AddComponent<VerticalLayoutGroup>();
       imageLayout.padding = new RectOffset(4, 4, 4, 4);
@@ -54,6 +53,7 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
 
       _helpText = Instantiate(_popupText, _hud.transform);
       _helpText.name = "Help Text Background Image";
+      _helpTextComponent = _helpText.GetComponentInChildren<Text>();
       
       // align middle-right edge of help with middle-right edge of screen
       var helpRect = _helpText.GetComponent<RectTransform>();
@@ -62,17 +62,31 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
       helpRect.pivot = new Vector2(1, .5f);
       helpRect.offsetMin = new Vector2(-8, 0);
       helpRect.offsetMax = new Vector2(-8, 0);
-      _helpText.SetActive(false);
+ 
+      _statusText = Instantiate(_popupText, _hud.transform);
+      _statusText.name = "Status Text Background Image";
+      _statusTextComponent = _statusText.GetComponentInChildren<Text>();
+ 
+      // align bottom-right edge of status text with bottom-right edge of screen
+      var statusRect = _statusText.GetComponent<RectTransform>();
+      statusRect.anchorMin = new Vector2(1, 0);
+      statusRect.anchorMax = new Vector2(1, 0);
+      statusRect.pivot = new Vector2(1, 0);
+      statusRect.offsetMin = new Vector2(-8, 8);
+      statusRect.offsetMax = new Vector2(-8, 8);
 
-      if (_settings.ShowHelp.Value) {
-         ToggleHelpText();
+      _hud.SetActive(false);
+      if (_settings.ShowHudByDefault.Value) {
+         ToggleHud();
       }
+      
+      _popupText.SetActive(false);
    }
 
    public void DisplayAndFadeOutText(string message)
    {
       // if the help text is disabled don't show the popup either
-      if (!_settings.ShowHelp.Value) {
+      if (!_settings.ShowHudByDefault.Value) {
          return;
       }
  
@@ -89,6 +103,15 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
       _hudTextFadeCoroutine = FadeTextToZeroAlpha(time, _popupTextComponent);
       StartCoroutine(_hudTextFadeCoroutine);
    }
+
+   public void ShowCameraStatus(PhotoModeCameraState cameraState) {
+      _statusTextComponent.text = $"""
+                                   Position: {cameraState.position}
+                                   Rotation: {cameraState.rotation.eulerAngles}
+                                   FOV: {cameraState.fov}
+                                   Focus Distance: {cameraState.FocusDistance}
+                                   """;
+   }
 	
    private IEnumerator FadeTextToZeroAlpha(float time, Text i)
    {
@@ -103,10 +126,13 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
       _popupText.SetActive(false);
    }
 
-   private void ToggleHelpText()
+   private void ToggleHud() {
+      UpdateHelpText();
+      _hud.SetActive(!_hud.activeSelf);
+   }
+ 
+   private void UpdateHelpText()
    {
-      var text = _helpText.GetComponentInChildren<Text>();
-
       var message = """
                     Pan Camera: WASD
                     Change Roll: M3 + Mouse X
@@ -119,9 +145,8 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
          }
       }
 
-      message += "\n\nYou can disable this showing by default in settings";
-      text.text = message;
-      _helpText.SetActive(!_helpText.activeSelf);
+      message += "\n\nYou can disable the HUD in the settings or config";
+      _helpTextComponent.text = message;
    }
 
    private void Awake() {
@@ -129,8 +154,8 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
    }
 
    private void Update() {
-      if (Input.GetKeyDown(_settings.DisplayHelpText.Value.MainKey)) {
-         ToggleHelpText();
+      if (Input.GetKeyDown(_settings.ToggleHud.Value.MainKey)) {
+         ToggleHud();
       }
    }
 
@@ -142,6 +167,9 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
    private GameObject _popupText;
    private Text _popupTextComponent;
    private GameObject _helpText;
+   private Text _helpTextComponent;
+   private GameObject _statusText;
+   private Text _statusTextComponent;
    private GameObject _hud;
    private PhotoModeSettings _settings;
    private IEnumerator _hudTextFadeCoroutine;
