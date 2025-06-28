@@ -239,6 +239,7 @@ internal class PhotoModeController : MonoBehaviour {
             _dollyPlaybackCoroutine = dollyService.DollyPlayback(dollyStates, state => _cameraState = state);
          }
  
+         StopCoroutine(_dollyPlaybackCoroutine);
          StartCoroutine(_dollyPlaybackCoroutine);
          return;
       }
