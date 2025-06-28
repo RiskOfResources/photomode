@@ -10,7 +10,6 @@ public class PhotoModePostProcessing : MonoBehaviour {
    private PostProcessVolume _quickVolume;
    private Vignette _vignette;
    private Texture3D _lutRef;
-   private PostProcessLayer.Antialiasing _antiAliasing;
    private PostProcessLayer _postProcessLayer;
 
    public void Init(PhotoModeSettings settings, PostProcessLayer postProcessLayer) {
@@ -49,20 +48,23 @@ public class PhotoModePostProcessing : MonoBehaviour {
       colorGrading.enabled.value = settings.PostProcessColorGrading.Value;
 
       // import LUT if specified
-      if (settings.PostProcessColorGrading.Value && _lutRef is null && !string.IsNullOrEmpty(settings.LutName.Value)) {
+      var noLutSpecified = string.IsNullOrEmpty(settings.LutName.Value);
+      if (settings.PostProcessColorGrading.Value && _lutRef is null && !noLutSpecified) {
          var filePath = System.IO.Path.Combine(Application.dataPath, settings.LutName.Value);
          _lutRef = CubeLutImporter.ImportCubeLut(filePath);
 
          if (_lutRef is not null) {
+            colorGrading.enabled.Override(true);
             colorGrading.externalLut.Override(_lutRef);
             colorGrading.gradingMode.Override(GradingMode.External);
          }
       }
+      else if (noLutSpecified) {
+         colorGrading.enabled.Override(false);
+      }
 
       _postProcessGameObject.TryGetComponent(out _quickVolume);
-      if (!_quickVolume) {
-         _quickVolume = _postProcessGameObject.AddComponent<PostProcessVolume>();
-      }
+      _quickVolume ??= _postProcessGameObject.AddComponent<PostProcessVolume>();
  
       _quickVolume.priority = 1000;
       PostProcessProfile profile = _quickVolume.profile;
