@@ -28,6 +28,8 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
          rotation = Quaternion.LookRotation(cameraRigController.sceneCam.transform.rotation * Vector3.forward),
          fov = cameraRigController.sceneCam.fieldOfView,
          FocusDistance = _settings.PostProcessFocusDistance.Value,
+         Aperture = _settings.PostProcessAperture.Value,
+         FocalLength = _settings.PostProcessFocalLength.Value,
       };
    }
  
@@ -59,6 +61,8 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
 
          if (updates.Priority != UpdatePriority.Dolly || _autoFocus) {
             _settings.PostProcessFocusDistance.Value = cameraState.FocusDistance;
+            _settings.PostProcessAperture.Value = cameraState.Aperture;
+            _settings.PostProcessFocalLength.Value = cameraState.FocalLength;
          }
  
          _cameraRigController.sceneCam.fieldOfView = cameraState.fov;

@@ -206,17 +206,17 @@ internal class PhotoModeController : MonoBehaviour {
       float scroll = Input.mouseScrollDelta.y;
       if (Mathf.Abs(scroll) > 0) {
          if (_settings.ScrollWheelModifierKey.Value.IsPressed()) {
-               var focalLength = Math.Max(0, _settings.PostProcessFocalLength.Value + scroll);
-               _settings.PostProcessFocalLength.Value = focalLength;
-               DisplayAndFadeOutText($"Focal Length: {focalLength}mm");
+               var focalLength = Math.Max(0, _cameraState.FocalLength + scroll);
+               _cameraState.FocalLength = focalLength;
+               DisplayAndFadeOutText($"Focal Length: {focalLength:F1}mm");
          }
          else if (_settings.ScrollWheelApertureModifierKey.Value.IsPressed()) {
-            var aperture = Math.Max(0, _settings.PostProcessAperture.Value + scroll * 0.1f);
-            _settings.PostProcessAperture.Value = aperture;
+            var aperture = Math.Max(0, _cameraState.Aperture + scroll * 0.1f);
+            _cameraState.Aperture = aperture;
             DisplayAndFadeOutText($"Aperture: f/{aperture:F1}");
          }
          else {
-            var focusDistance = Math.Max(0, _settings.PostProcessFocusDistance.Value + scroll * _settings.PostProcessingFocusDistanceStep.Value);
+            var focusDistance = Math.Max(0, _cameraState.FocusDistance + scroll * _settings.PostProcessingFocusDistanceStep.Value);
             _cameraState.FocusDistance = focusDistance;
             DisplayAndFadeOutText($"Focus Distance: {focusDistance}");
          }
@@ -233,11 +233,12 @@ internal class PhotoModeController : MonoBehaviour {
 
          if (dollyStates.Count > 2) {
             var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
-            _dollyPlaybackCoroutine = dollyService.MultiPointDollyPlayback(curve);
+            _dollyPlaybackCoroutine = dollyService.MultiPointDollyPlayback(curve, state => _cameraState = state);
          }
          else {
-            _dollyPlaybackCoroutine = dollyService.DollyPlayback(dollyStates);
+            _dollyPlaybackCoroutine = dollyService.DollyPlayback(dollyStates, state => _cameraState = state);
          }
+ 
          StartCoroutine(_dollyPlaybackCoroutine);
          return;
       }

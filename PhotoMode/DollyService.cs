@@ -5,10 +5,11 @@ using UnityEngine;
 
 namespace PhotoMode;
 
+// TODO refactor these 2 playback methods into a single method 
 public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) {
    private float CamSpeed => CameraControl.Instance.GetCameraSpeed(dollyCamSpeed);
 
-   public IEnumerator DollyPlayback(List<PhotoModeCameraState> dollyStates) {
+   public IEnumerator DollyPlayback(List<PhotoModeCameraState> dollyStates, Action<PhotoModeCameraState> onCameraChange) {
       var dollyIndex = 0;
       var linearCamera = dollyStates[0];
 
@@ -33,12 +34,12 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
             dollyIndex++;
          }
 
-         UpdateCamera(currentState);
+         UpdateCamera(currentState, onCameraChange);
          yield return null;
       }
    }
 
-   public IEnumerator MultiPointDollyPlayback(List<PhotoModeCameraState> positionCurve) {
+   public IEnumerator MultiPointDollyPlayback(List<PhotoModeCameraState> positionCurve, Action<PhotoModeCameraState> onCameraChange) {
       List<PhotoModeCameraState> states = positionCurve;
       var index = 0;
       var linearCamera = states[0];
@@ -75,16 +76,18 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
             currentState.rotation = Quaternion.Slerp(currentControlPoint.rotation, nextControlPoint.rotation, eased);
          }
 
-         UpdateCamera(currentState);
+         UpdateCamera(currentState, onCameraChange);
          yield return null;
       }
    }
 
-   private void UpdateCamera(PhotoModeCameraState currentState) {
+   private void UpdateCamera(PhotoModeCameraState currentState, Action<PhotoModeCameraState> onCameraChange) {
       CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
          CameraState = currentState,
          Priority = UpdatePriority.Dolly
       });
+      
+      onCameraChange?.Invoke(currentState);
    }
 
    private float GetEasedRatio(float x, Easing e) {

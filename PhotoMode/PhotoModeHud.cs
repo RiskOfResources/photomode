@@ -85,11 +85,6 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
 
    public void DisplayAndFadeOutText(string message)
    {
-      // if the help text is disabled don't show the popup either
-      if (!_settings.ShowHudByDefault.Value) {
-         return;
-      }
- 
       if (_hudTextFadeCoroutine != null) {
          StopCoroutine(_hudTextFadeCoroutine);
       }
@@ -105,12 +100,7 @@ public class PhotoModeHud : MonoBehaviour, IPhotoModeUnityComponentSingleton {
    }
 
    public void ShowCameraStatus(PhotoModeCameraState cameraState) {
-      _statusTextComponent.text = $"""
-                                   Position: {cameraState.position}
-                                   Rotation: {cameraState.rotation.eulerAngles}
-                                   FOV: {cameraState.fov}
-                                   Focus Distance: {cameraState.FocusDistance}
-                                   """;
+      _statusTextComponent.text = cameraState.ToString();
    }
 	
    private IEnumerator FadeTextToZeroAlpha(float time, Text i)

@@ -77,7 +77,9 @@ public class SmoothCurve {
 						position = position,
 						rotation = Quaternion.Slerp(controlPoints[0].rotation, controlPoints.Last().rotation, ratio),
 						fov = Mathf.Lerp(currentState.fov, nextState.fov, (float) i / numberOfPoints),
-						FocusDistance = Mathf.Lerp(currentState.FocusDistance, nextState.FocusDistance, (float) i / numberOfPoints)
+						FocusDistance = Mathf.Lerp(currentState.FocusDistance, nextState.FocusDistance, (float) i / numberOfPoints),
+						Aperture = Mathf.Lerp(currentState.Aperture, nextState.Aperture, (float) i / numberOfPoints),
+						FocalLength = Mathf.Lerp(currentState.FocalLength, nextState.FocalLength, (float) i / numberOfPoints)
 					});
 				}
 				else {
@@ -86,6 +88,8 @@ public class SmoothCurve {
 						rotation = Quaternion.Slerp(currentState.rotation, nextState.rotation, (float) i / numberOfPoints),
 						fov = Mathf.Lerp(currentState.fov, nextState.fov, (float) i / numberOfPoints),
 						FocusDistance = Mathf.Lerp(currentState.FocusDistance, nextState.FocusDistance, (float) i / numberOfPoints),
+						Aperture = Mathf.Lerp(currentState.Aperture, nextState.Aperture, (float) i / numberOfPoints),
+						FocalLength = Mathf.Lerp(currentState.FocalLength, nextState.FocalLength, (float) i / numberOfPoints),
 						ControlPoints = new Tuple<PhotoModeCameraState, PhotoModeCameraState>(currentState, nextState)
 					});
 				}
