@@ -35,6 +35,7 @@ public class PhotoModeSettings {
       CameraMinFov = CreatePhotoModeSetting(SettingCategory.General, "Camera Min FOV", 4f, "Minimum camera field of view.", min: 0, max: 180);
       CameraMaxFov = CreatePhotoModeSetting(SettingCategory.General, "Camera Max FOV", 120f, "Maximum camera field of view.", min: 0, max: 180);
       TimeScaleStep = CreatePhotoModeSetting(SettingCategory.General, "Time Scale Step", 0.1f, "Step value to increase/decrease time scale when key is pressed.", max: 10);
+      PhysicsTickRate = CreatePhotoModeSetting(SettingCategory.General, "Physics Tick Rate", 60, "How many times per second physics objects are updated while in Photo Mode. Higher values will smooth out movements but require more processing power and may change physics interactions which is why it defaults to the game default of: 60.", 2, 5000, 1);
       
       SmoothCamera = CreatePhotoModeSetting(SettingCategory.General, "Smooth Camera", true, "Check to smooth the free-cam.");
       PanningSmooth = CreatePhotoModeSetting(SettingCategory.General, "Camera Smooth Pan Speed", 50f, "How fast the smooth pan camera can move.", 0);
@@ -159,6 +160,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<float> CameraMinFov;
    public readonly PhotoModeSetting<float> CameraMaxFov;
    public readonly PhotoModeSetting<float> TimeScaleStep;
+   public readonly PhotoModeSetting<float> PhysicsTickRate;
 
    // smooth cam
    public readonly PhotoModeSetting<bool> SmoothCamera;

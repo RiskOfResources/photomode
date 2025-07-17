@@ -74,6 +74,7 @@ public class PhotoModePlugin : BaseUnityPlugin
 	
 		// time scale before pausing
 		var timeScale = Time.timeScale;
+		var fixedDeltaTime = Time.fixedDeltaTime;
 		component.interactable = cameraRigController && cameraRigController.localUserViewer != null;
 		component.onClick = new Button.ButtonClickedEvent();
 		component.onClick.AddListener(() => {
@@ -81,7 +82,11 @@ public class PhotoModePlugin : BaseUnityPlugin
 			var pmGo = new GameObject("PhotoModeController");
 			pmGo.SetActive(false);
 			var controller = pmGo.AddComponent<PhotoModeController>();
-			controller.OnExit += (_, _) => Time.timeScale = timeScale;
+			controller.OnExit += (_, _) => {
+				Time.timeScale = timeScale;
+				Time.fixedDeltaTime = fixedDeltaTime;
+			};
+	
 			controller.EnterPhotoMode(_settings, cameraRigController);
 			pmGo.SetActive(true);
 			StartCoroutine(PauseAtEndOfFrame());
@@ -89,6 +94,14 @@ public class PhotoModePlugin : BaseUnityPlugin
 			IEnumerator PauseAtEndOfFrame() {
 				yield return new WaitForEndOfFrame();
 				Time.timeScale = 0;
+
+				var physicsTickRate = _settings.PhysicsTickRate.Value;
+				if (physicsTickRate > 0) {
+					var physicsTickInterval = 1 / physicsTickRate;
+					if(!Mathf.Approximately(physicsTickInterval, fixedDeltaTime)) {
+						Time.fixedDeltaTime = physicsTickInterval;
+					}
+				}
 			}
 		});
 	}
