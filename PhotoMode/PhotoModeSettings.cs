@@ -81,7 +81,6 @@ public class PhotoModeSettings {
 
       // post processing
       PostProcessing = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Enable Post Processing", true, "Enable post processing effects");
-      PostProcessingAntiAliasing = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Anti-aliasing", true, "Enable anti-aliasing");
       PostProcessDepth = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Depth of Field", true, "Enable depth of field");
       PostProcessFocusDistance = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focus Distance", 3.2f, "Distance to the point of focus. Adjustable on the fly with the scroll wheel", min: 0, max: 1000);
       PostProcessFocalLength = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Focal Length", 50f, "Set the distance between the lens and the film. The larger the value is, the shallower the depth of field is.", min: 1, max: 300);
@@ -101,6 +100,7 @@ public class PhotoModeSettings {
       // other
       TextFadeTime = CreatePhotoModeSetting(SettingCategory.UI, "Text Fade Out Time", 1.5f, "How long to show text before fading out", min: 0, increment: 0.1f);
       ShowHudByDefault = CreatePhotoModeSetting(SettingCategory.UI, "Show HUD", true, "Show the photo mode HUD");
+      ShowGameHud = CreatePhotoModeSetting(SettingCategory.UI, "Show Game HUD", false, "Show the game's HUD while in photo mode");
       ShowDollyPath = CreatePhotoModeSetting(SettingCategory.UI, "Show Dolly Path", false, "Show the path of the dolly (mostly for debugging).");
       
       // experimental
@@ -208,7 +208,6 @@ public class PhotoModeSettings {
 
    // post processing
    public readonly PhotoModeSetting<bool> PostProcessing;
-   public readonly PhotoModeSetting<bool> PostProcessingAntiAliasing;
    public readonly PhotoModeSetting<bool> PostProcessDepth;
    public readonly PhotoModeSetting<float> PostProcessFocusDistance;
    public readonly PhotoModeSetting<float> PostProcessFocalLength;
@@ -227,6 +226,7 @@ public class PhotoModeSettings {
    // other
    public readonly PhotoModeSetting<float> TextFadeTime;
    public readonly PhotoModeSetting<bool> ShowHudByDefault;
+   public readonly PhotoModeSetting<bool> ShowGameHud;
    public readonly PhotoModeSetting<bool> ShowDollyPath;
    public readonly PhotoModeSetting<bool> DisableAllMovement;
    public readonly PhotoModeSetting<bool> ExportLinearColorSpace;

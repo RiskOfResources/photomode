@@ -69,6 +69,7 @@ public class PhotoModePostProcessing : MonoBehaviour {
       _quickVolume.priority = 1000;
       PostProcessProfile profile = _quickVolume.profile;
       profile.AddSettings(_depthOfField);
+      profile.AddSettings(_vignette);
       _quickVolume.isGlobal = true;
       _quickVolume.weight = 1;
       _quickVolume.enabled = settings.PostProcessing.Value;
@@ -87,7 +88,6 @@ public class PhotoModePostProcessing : MonoBehaviour {
          _vignette.smoothness.Override(_settings.PostProcessVignetteSmoothness.Value);
          _vignette.roundness.Override(_settings.PostProcessVignetteRoundness.Value);
          _vignette.rounded.Override(_settings.PostProcessVignetteRounded.Value);
-         _postProcessLayer.antialiasingMode = _settings.PostProcessingAntiAliasing.Value ? PostProcessLayer.Antialiasing.FastApproximateAntialiasing : PostProcessLayer.Antialiasing.None;
          _quickVolume.enabled = true;
       }
       else {
@@ -97,6 +97,7 @@ public class PhotoModePostProcessing : MonoBehaviour {
 
    private void OnDestroy() {
       // don't destroy: something is holding a reference to the volumes and throws an NRE
+      _quickVolume.profile.settings.Clear();
       _quickVolume.enabled = false;
    }
 }

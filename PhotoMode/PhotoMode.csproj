@@ -5,7 +5,7 @@
         <AssemblyName>RiskOfResources.PhotoMode</AssemblyName>
         <Product>PhotoMode</Product>
         <Description>Photo Mode Mod</Description>
-        <Version>3.2.2</Version>
+        <Version>3.2.3</Version>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 

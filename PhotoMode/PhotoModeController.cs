@@ -73,11 +73,11 @@ internal class PhotoModeController : MonoBehaviour {
       var onlyPlayers = settings.RestrictArcPlayers.Value;
       if (onlyPlayers) {
          var characterModels = FindObjectsOfType<CharacterModel>();
-         _players = characterModels != null ? characterModels.Select(m => m.transform).ToList() : new List<Transform>();
+         _players = characterModels != null ? characterModels.Select(m => m.transform).ToList() : [];
       }
       else {
          var modelLocators = FindObjectsOfType<ModelLocator>();
-         _players = modelLocators != null ? modelLocators.Select(m => m.transform).ToList() : new List<Transform>();
+         _players = modelLocators != null ? modelLocators.Select(m => m.transform).ToList() : [];
       }
       Logger.Log("Entering photo mode");
 
@@ -85,9 +85,13 @@ internal class PhotoModeController : MonoBehaviour {
       SettingsConVars.enableDamageNumbers.SetBool(false);
       var showExpMoney = SettingsConVars.cvExpAndMoneyEffects.value;
       SettingsConVars.cvExpAndMoneyEffects.SetBool(false);
+      var hudEnabled = HUD.cvHudEnable.value;
+      HUD.cvHudEnable.SetBool(settings.ShowHudByDefault.Value);
+ 
       OnExit += (_, _) => {
          SettingsConVars.enableDamageNumbers.SetBool(enableDamageNumbers);
          SettingsConVars.cvExpAndMoneyEffects.SetBool(showExpMoney);
+         HUD.cvHudEnable.SetBool(hudEnabled);
          cameraRigController.hud.mainContainer.GetComponent<Canvas>().enabled = true;
       };
 
@@ -206,9 +210,9 @@ internal class PhotoModeController : MonoBehaviour {
       float scroll = Input.mouseScrollDelta.y;
       if (Mathf.Abs(scroll) > 0) {
          if (_settings.ScrollWheelModifierKey.Value.IsPressed()) {
-               var focalLength = Math.Max(0, _cameraState.FocalLength + scroll);
-               _cameraState.FocalLength = focalLength;
-               DisplayAndFadeOutText($"Focal Length: {focalLength:F1}mm");
+            var focalLength = Math.Max(0, _cameraState.FocalLength + scroll);
+            _cameraState.FocalLength = focalLength;
+            DisplayAndFadeOutText($"Focal Length: {focalLength:F1}mm");
          }
          else if (_settings.ScrollWheelApertureModifierKey.Value.IsPressed()) {
             var aperture = Math.Max(0, _cameraState.Aperture + scroll * 0.1f);
@@ -372,11 +376,14 @@ internal class PhotoModeController : MonoBehaviour {
       }
  
       if (arcKeyDown && _players.Count > 0) {
-         _arcPreviousPosition = _players[_selectedPlayerIndex].position;
-         _smoothArcOffset = _cameraState.position - _players[_selectedPlayerIndex].position;
+         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
+         _arcPreviousPosition = _players[index].position;
+         _smoothArcOffset = _cameraState.position - _players[index].position;
+         DisplayAndFadeOutText($"Tracking player {_players[index].name}");
       } else if (_isArcing && _players.Count > 0) {
          Quaternion rotation;
-         var player = _players[_selectedPlayerIndex];
+         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
+         var player = _players[index];
 
          var smoothArc = _settings.SmoothArcCamera.Value;
          if (smoothArc) {
@@ -403,14 +410,22 @@ internal class PhotoModeController : MonoBehaviour {
       }
 		
       if (Input.GetKeyDown(_settings.NextPlayerKey.Value.MainKey) && _players.Count > 0) {
-         _selectedPlayerIndex = ((_selectedPlayerIndex + 1) % _players.Count + _players.Count) % _players.Count;
-         _arcPreviousPosition = _players[_selectedPlayerIndex].position;
-         DisplayAndFadeOutText($"Focused target: {_selectedPlayerIndex}");
+         _selectedPlayerIndex++;
+         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
+         _arcPreviousPosition = _players[index].position;
+         var player = _players[index];
+         if (player.gameObject) {
+            DisplayAndFadeOutText($"Tracking player: {player.gameObject.name} at index {index}");
+         }
       }
       else if (Input.GetKeyDown(_settings.PrevPlayerKey.Value.MainKey) && _players.Count > 0) {
-         _selectedPlayerIndex = ((_selectedPlayerIndex - 1) % _players.Count + _players.Count) % _players.Count;
-         _arcPreviousPosition = _players[_selectedPlayerIndex].position;
-         DisplayAndFadeOutText($"Focused target: {_selectedPlayerIndex}");
+         _selectedPlayerIndex--;
+         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
+         _arcPreviousPosition = _players[index].position;
+         var player = _players[index];
+         if (player.gameObject) {
+            DisplayAndFadeOutText($"Tracking player: {player.gameObject.name} at index {index}");
+         }
       }
 
       if (Input.GetKeyDown(_settings.ToggleRecordingKey.Value.MainKey)) {
