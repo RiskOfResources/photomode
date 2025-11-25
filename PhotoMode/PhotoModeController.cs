@@ -15,7 +15,7 @@ namespace PhotoMode;
 internal class PhotoModeController : MonoBehaviour {
    private PhotoModeSettings _settings;
    private LocalUser _localUser;
-   private List<Transform> _players;
+   private List<Tuple<Vector3, GameObject>> _arcTargets = [];
    private PhotoModeCameraState _cameraState;
    private static PhotoModeCameraState _startCamera;
    private static PhotoModeCameraState _endCamera;
@@ -76,7 +76,13 @@ internal class PhotoModeController : MonoBehaviour {
       var players = characterModels != null ? characterModels.Select(m => m.transform).ToList() : [];
       var modelLocators = FindObjectsOfType<ModelLocator>();
       var models = modelLocators != null ? modelLocators.Select(m => m.transform).ToList() : [];
-      _players = settings.RestrictArcPlayers.Value ? players : players.Concat(models).ToList();
+      var transforms = settings.RestrictArcPlayers.Value ? players : players.Concat(models).ToList();
+      foreach (var t in transforms) {
+         var cm = t.GetComponent<CharacterModel>();
+         var centerPosition = cm?.GetMainRenderer()?.bounds.center ?? t.position;
+         _arcTargets.Add(new Tuple<Vector3, GameObject>(centerPosition, t.gameObject));
+      }
+ 
       Logger.Log("Entering photo mode");
 
       var enableDamageNumbers = SettingsConVars.enableDamageNumbers.value;
@@ -378,43 +384,43 @@ internal class PhotoModeController : MonoBehaviour {
          DisplayAndFadeOutText($"Auto Cam: {_isAutoCam}");
       }
  
-      if ((_isArcing || _isAutoCam) && _players.Count > 0) {
+      if ((_isArcing || _isAutoCam) && _arcTargets.Count > 0) {
          Quaternion rotation;
-         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
-         var player = _players[index];
+         var index = Math.Abs(_selectedPlayerIndex % _arcTargets.Count);
+         var player = _arcTargets[index];
          var smoothArc = _settings.SmoothArcCamera.Value;
          var arcPanSmoothTime = _settings.ArcPanningSmoothTime.Value;
  
          var unscaledTimeAsDouble = Time.unscaledTimeAsDouble;
          if (_isAutoCam) {
-            if (unscaledTimeAsDouble > _nextAutoSwitchTime && (_cameraState.position - (player.position + _smoothArcOffset)).sqrMagnitude < 1) {
+            if (unscaledTimeAsDouble > _nextAutoSwitchTime && (_cameraState.position - (player.Item1 + _smoothArcOffset)).sqrMagnitude < 1) {
                _nextAutoSwitchTime = unscaledTimeAsDouble + UnityEngine.Random.Range(2, 12);
                _smoothArcOffset = UnityEngine.Random.insideUnitSphere * UnityEngine.Random.Range(1, 20);
                _smoothArcOffset.y = Math.Abs(_smoothArcOffset.y);
-               _selectedPlayerIndex = UnityEngine.Random.Range(0, _players.Count);
-               player = _players[_selectedPlayerIndex];
-               DisplayAndFadeOutText($"Switching to: {player.gameObject.name}");
+               _selectedPlayerIndex = UnityEngine.Random.Range(0, _arcTargets.Count);
+               player = _arcTargets[_selectedPlayerIndex];
+               DisplayAndFadeOutText($"Switching to: {player.Item2.name}");
             }
 
             smoothArc = true;
-            _cameraState.FocusDistance = (player.position - _cameraState.position).magnitude;
+            _cameraState.FocusDistance = (player.Item1 - _cameraState.position).magnitude;
          }
  
 
          if (smoothArc) {
             var speed = _settings.SmoothArcCamSpeed.Value;
-            rotation = Quaternion.RotateTowards(_cameraState.rotation, Quaternion.LookRotation(player.transform.position - _cameraState.position), Time.unscaledDeltaTime * speed * 10);
+            rotation = Quaternion.RotateTowards(_cameraState.rotation, Quaternion.LookRotation(player.Item1 - _cameraState.position), Time.unscaledDeltaTime * speed * 10);
          }
          else {
-            rotation = Quaternion.LookRotation(player.transform.position - _cameraState.position);
+            rotation = Quaternion.LookRotation(player.Item1 - _cameraState.position);
          }
 
          if (smoothArc) {
             _smoothArcOffset += newPosition;
-            _cameraState.position = Vector3.SmoothDamp(_cameraState.position, player.position + _smoothArcOffset, ref _arcSmoothPositionVelocity, arcPanSmoothTime, float.PositiveInfinity, Time.unscaledDeltaTime);
+            _cameraState.position = Vector3.SmoothDamp(_cameraState.position, player.Item1 + _smoothArcOffset, ref _arcSmoothPositionVelocity, arcPanSmoothTime, float.PositiveInfinity, Time.unscaledDeltaTime);
          }
          else {
-            var position = player.position;
+            var position = player.Item1;
             var diff = position - _arcPreviousPosition;
             _cameraState.position += diff;
             _arcPreviousPosition = position;
@@ -423,22 +429,22 @@ internal class PhotoModeController : MonoBehaviour {
          _cameraState.rotation = rotation;
       }
 		
-      if (Input.GetKeyDown(_settings.NextPlayerKey.Value.MainKey) && _players.Count > 0) {
+      if (Input.GetKeyDown(_settings.NextPlayerKey.Value.MainKey) && _arcTargets.Count > 0) {
          _selectedPlayerIndex++;
-         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
-         _arcPreviousPosition = _players[index].position;
-         var player = _players[index];
-         if (player.gameObject) {
-            DisplayAndFadeOutText($"Tracking player: {player.gameObject.name} at index {index}");
+         var index = Math.Abs(_selectedPlayerIndex % _arcTargets.Count);
+         _arcPreviousPosition = _arcTargets[index].Item1;
+         var player = _arcTargets[index];
+         if (player.Item2) {
+            DisplayAndFadeOutText($"Tracking player: {player.Item2.name} at index {index}");
          }
       }
-      else if (Input.GetKeyDown(_settings.PrevPlayerKey.Value.MainKey) && _players.Count > 0) {
+      else if (Input.GetKeyDown(_settings.PrevPlayerKey.Value.MainKey) && _arcTargets.Count > 0) {
          _selectedPlayerIndex--;
-         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
-         _arcPreviousPosition = _players[index].position;
-         var player = _players[index];
-         if (player.gameObject) {
-            DisplayAndFadeOutText($"Tracking player: {player.gameObject.name} at index {index}");
+         var index = Math.Abs(_selectedPlayerIndex % _arcTargets.Count);
+         _arcPreviousPosition = _arcTargets[index].Item1;
+         var player = _arcTargets[index];
+         if (player.Item2) {
+            DisplayAndFadeOutText($"Tracking player: {player.Item2.name} at index {index}");
          }
       }
 
