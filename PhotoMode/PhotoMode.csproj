@@ -5,7 +5,7 @@
         <AssemblyName>RiskOfResources.PhotoMode</AssemblyName>
         <Product>PhotoMode</Product>
         <Description>Photo Mode Mod</Description>
-        <Version>3.2.3</Version>
+        <Version>3.3.0</Version>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
@@ -14,10 +14,10 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="BepInEx.Core" Version="5.4.21" />
-        <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
-        <PackageReference Include="MMHOOK.RoR2" Version="2025.6.3" />
+        <PackageReference Include="BepInEx.PluginInfoProps" Version="2.1.0" />
+        <PackageReference Include="MMHOOK.RoR2" Version="2025.11.19" />
         <PackageReference Include="R2API.Core" Version="5.1.5" />
-        <PackageReference Include="RiskOfRain2.GameLibs" Version="1.3.9-r.0" />
+        <PackageReference Include="RiskOfRain2.GameLibs" Version="1.4.0-r.0" />
         <PackageReference Include="Rune580.Mods.RiskOfRain2.RiskOfOptions" Version="2.8.3" />
         <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" IncludeAssets="compile" />
     </ItemGroup>

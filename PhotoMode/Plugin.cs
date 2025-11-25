@@ -10,7 +10,7 @@ using UnityEngine.UI;
 
 namespace PhotoMode;
 
-[BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
+[BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [NetworkCompatibility(CompatibilityLevel.NoNeedForSync)]
 [BepInDependency("com.rune580.riskofoptions", BepInDependency.DependencyFlags.SoftDependency)]
 public class PhotoModePlugin : BaseUnityPlugin

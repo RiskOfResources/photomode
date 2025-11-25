@@ -57,6 +57,7 @@ public class PhotoModeSettings {
       CameraSprintKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Speed Up Camera", new KeyboardShortcut(KeyCode.LeftControl));
       CameraSlowKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Slow Down Camera", new KeyboardShortcut(KeyCode.LeftShift));
       ArcCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Camera On Player", new KeyboardShortcut(KeyCode.Space));
+      AutoCamKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Auto Cam", new KeyboardShortcut(KeyCode.B));
       ToggleRecordingKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Recording Key", new KeyboardShortcut(KeyCode.R));
       DollyPlaybackKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Dolly Playback Key", new KeyboardShortcut(KeyCode.P));
       DollyCheckpointKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Add Dolly Checkpoint", new KeyboardShortcut(KeyCode.T));
@@ -184,6 +185,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<KeyboardShortcut> CameraSlowKey;
 
    public readonly PhotoModeSetting<KeyboardShortcut> ArcCameraKey;
+   public readonly PhotoModeSetting<KeyboardShortcut> AutoCamKey;
    public readonly PhotoModeSetting<KeyboardShortcut> ToggleRecordingKey;
    public readonly PhotoModeSetting<KeyboardShortcut> DollyPlaybackKey;
    public readonly PhotoModeSetting<KeyboardShortcut> DollyCheckpointKey;

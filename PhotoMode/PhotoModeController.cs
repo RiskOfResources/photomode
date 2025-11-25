@@ -32,6 +32,8 @@ internal class PhotoModeController : MonoBehaviour {
    private IEnumerator _dollyPlaybackCoroutine;
    private float _rollSum;
    private bool _isArcing;
+   private bool _isAutoCam;
+   private double _nextAutoSwitchTime;
    private Vector3 _smoothArcOffset = Vector3.zero;
    private Vector3 _arcSmoothPositionVelocity = Vector3.zero;
    private Vector3 _smoothPositionVelocity = Vector3.zero;
@@ -70,15 +72,11 @@ internal class PhotoModeController : MonoBehaviour {
       _lineRenderer = dollyPath.AddComponent<LineRenderer>();
       _lineRenderer.enabled = settings.ShowDollyPath.Value;
 
-      var onlyPlayers = settings.RestrictArcPlayers.Value;
-      if (onlyPlayers) {
-         var characterModels = FindObjectsOfType<CharacterModel>();
-         _players = characterModels != null ? characterModels.Select(m => m.transform).ToList() : [];
-      }
-      else {
-         var modelLocators = FindObjectsOfType<ModelLocator>();
-         _players = modelLocators != null ? modelLocators.Select(m => m.transform).ToList() : [];
-      }
+      var characterModels = FindObjectsOfType<CharacterModel>();
+      var players = characterModels != null ? characterModels.Select(m => m.transform).ToList() : [];
+      var modelLocators = FindObjectsOfType<ModelLocator>();
+      var models = modelLocators != null ? modelLocators.Select(m => m.transform).ToList() : [];
+      _players = settings.RestrictArcPlayers.Value ? players : players.Concat(models).ToList();
       Logger.Log("Entering photo mode");
 
       var enableDamageNumbers = SettingsConVars.enableDamageNumbers.value;
@@ -374,18 +372,34 @@ internal class PhotoModeController : MonoBehaviour {
       else if (!_settings.ToggleArcCamera.Value) {
          _isArcing = Input.GetKey(_settings.ArcCameraKey.Value.MainKey);
       }
+
+      if (_settings.AutoCamKey.Value.IsDown()) {
+         _isAutoCam = !_isAutoCam;
+         DisplayAndFadeOutText($"Auto Cam: {_isAutoCam}");
+      }
  
-      if (arcKeyDown && _players.Count > 0) {
-         var index = Math.Abs(_selectedPlayerIndex % _players.Count);
-         _arcPreviousPosition = _players[index].position;
-         _smoothArcOffset = _cameraState.position - _players[index].position;
-         DisplayAndFadeOutText($"Tracking player {_players[index].name}");
-      } else if (_isArcing && _players.Count > 0) {
+      if ((_isArcing || _isAutoCam) && _players.Count > 0) {
          Quaternion rotation;
          var index = Math.Abs(_selectedPlayerIndex % _players.Count);
          var player = _players[index];
-
          var smoothArc = _settings.SmoothArcCamera.Value;
+         var arcPanSmoothTime = _settings.ArcPanningSmoothTime.Value;
+ 
+         var unscaledTimeAsDouble = Time.unscaledTimeAsDouble;
+         if (_isAutoCam) {
+            if (unscaledTimeAsDouble > _nextAutoSwitchTime) {
+               _nextAutoSwitchTime = unscaledTimeAsDouble + UnityEngine.Random.Range(2, 12);
+               _smoothArcOffset = UnityEngine.Random.insideUnitSphere * UnityEngine.Random.Range(1, 20);
+               _smoothArcOffset.y = Math.Abs(_smoothArcOffset.y);
+               _selectedPlayerIndex = UnityEngine.Random.Range(0, _players.Count);
+               player = _players[_selectedPlayerIndex];
+            }
+
+            smoothArc = true;
+            _cameraState.FocusDistance = (player.position - _cameraState.position).magnitude;
+         }
+ 
+
          if (smoothArc) {
             var speed = _settings.SmoothArcCamSpeed.Value;
             rotation = Quaternion.RotateTowards(_cameraState.rotation, Quaternion.LookRotation(player.transform.position - _cameraState.position), Time.unscaledDeltaTime * speed * 10);
@@ -395,13 +409,12 @@ internal class PhotoModeController : MonoBehaviour {
          }
 
          if (smoothArc) {
-            var arcPanSmoothTime = _settings.ArcPanningSmoothTime.Value;
             _smoothArcOffset += newPosition;
             _cameraState.position = Vector3.SmoothDamp(_cameraState.position, player.position + _smoothArcOffset, ref _arcSmoothPositionVelocity, arcPanSmoothTime, float.PositiveInfinity, Time.unscaledDeltaTime);
          }
          else {
             var position = player.position;
-            var diff = (position - _arcPreviousPosition);
+            var diff = position - _arcPreviousPosition;
             _cameraState.position += diff;
             _arcPreviousPosition = position;
          }
