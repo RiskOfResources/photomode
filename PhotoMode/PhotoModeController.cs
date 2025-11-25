@@ -387,12 +387,13 @@ internal class PhotoModeController : MonoBehaviour {
  
          var unscaledTimeAsDouble = Time.unscaledTimeAsDouble;
          if (_isAutoCam) {
-            if (unscaledTimeAsDouble > _nextAutoSwitchTime) {
+            if (unscaledTimeAsDouble > _nextAutoSwitchTime && (_cameraState.position - (player.position + _smoothArcOffset)).sqrMagnitude < 1) {
                _nextAutoSwitchTime = unscaledTimeAsDouble + UnityEngine.Random.Range(2, 12);
                _smoothArcOffset = UnityEngine.Random.insideUnitSphere * UnityEngine.Random.Range(1, 20);
                _smoothArcOffset.y = Math.Abs(_smoothArcOffset.y);
                _selectedPlayerIndex = UnityEngine.Random.Range(0, _players.Count);
                player = _players[_selectedPlayerIndex];
+               DisplayAndFadeOutText($"Switching to: {player.gameObject.name}");
             }
 
             smoothArc = true;
