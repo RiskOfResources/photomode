@@ -33,6 +33,7 @@ internal class PhotoModeController : MonoBehaviour {
    private float _rollSum;
    private bool _isArcing;
    private bool _isAutoCam;
+   private bool _isAutoDollyActive;
    private double _nextAutoSwitchTime;
    private Vector3 _smoothArcOffset = Vector3.zero;
    private Vector3 _arcSmoothPositionVelocity = Vector3.zero;
@@ -71,7 +72,11 @@ internal class PhotoModeController : MonoBehaviour {
       dollyPath.transform.SetParent(gameObject.transform);
       _lineRenderer = dollyPath.AddComponent<LineRenderer>();
       _lineRenderer.enabled = settings.ShowDollyPath.Value;
-
+      Shader shader = Shader.Find("Hopoo Games/Deferred/Standard");
+      _lineRenderer.material = new Material(shader) {
+         color = _settings.DollyPathColor.Value
+      };
+ 
       var characterModels = FindObjectsOfType<CharacterModel>();
       var players = characterModels != null ? characterModels.Select(m => m.transform).ToList() : [];
       var modelLocators = FindObjectsOfType<ModelLocator>();
@@ -251,6 +256,24 @@ internal class PhotoModeController : MonoBehaviour {
          StartCoroutine(_dollyPlaybackCoroutine);
          return;
       }
+      else if (Input.GetKeyDown(_settings.AutoDollyKey.Value.MainKey)) {
+         _isAutoDollyActive = !_isAutoDollyActive;
+         if (_isAutoDollyActive) {
+            _dollyPlaybackCoroutine = AutoDollyLoop();
+            StartCoroutine(_dollyPlaybackCoroutine);
+            DisplayAndFadeOutText("Auto Dolly Path Enabled");
+         }
+         else {
+            if (_dollyPlaybackCoroutine != null) {
+               StopCoroutine(_dollyPlaybackCoroutine);
+               _dollyPlaybackCoroutine = null;
+            }
+
+            DisplayAndFadeOutText("Auto Dolly Path Disabled");
+         }
+
+         return;
+      }
       else if (Input.GetKeyUp(_settings.DollyPlaybackKey.Value.MainKey)) {
          if (_dollyPlaybackCoroutine != null) {
             StopCoroutine(_dollyPlaybackCoroutine);
@@ -266,7 +289,7 @@ internal class PhotoModeController : MonoBehaviour {
          var roll = Quaternion.Euler(0, 0, -rollAmount);
          _cameraState.rotation *= roll;
 
-         if (_settings.SnapRollEnabled.Value && _rollSum < 2 || _rollSum > 358) {
+         if (_settings.SnapRollEnabled.Value && (_rollSum < 2 || _rollSum > 358)) {
             var rollEuler = _cameraState.rotation.eulerAngles;
             _cameraState.rotation = Quaternion.Euler(rollEuler.x, rollEuler.y, 0);
          }
@@ -502,6 +525,156 @@ internal class PhotoModeController : MonoBehaviour {
       }
       else {
          Logger.Log($"Photo Mode HUD missing? Couldn't display message {message}");
+      }
+   }
+
+   private IEnumerator AutoDollyLoop() {
+      while (_isAutoDollyActive) {
+         var nodeGraph = SceneInfo.instance?.groundNodes;
+         if (!nodeGraph) {
+            DisplayAndFadeOutText("No node graph found for auto dolly");
+            _isAutoDollyActive = false;
+            yield break;
+         }
+
+         var nodes = nodeGraph.nodes;
+         if (nodes == null || nodes.Length == 0) {
+            DisplayAndFadeOutText("Node graph is empty");
+            _isAutoDollyActive = false;
+            yield break;
+         }
+
+         var random = new System.Random();
+         var pathLength = (int)_settings.AutoDollyPathLength.Value;
+         var pathNodes = new List<RoR2.Navigation.NodeGraph.NodeIndex>();
+
+         var startNodeIndex = random.Next(nodes.Length);
+         var currentNodeIndex = new RoR2.Navigation.NodeGraph.NodeIndex(startNodeIndex);
+         pathNodes.Add(currentNodeIndex);
+
+         for (int i = 0; i < pathLength; i++) {
+            var linkIndices = nodeGraph.GetActiveNodeLinks(currentNodeIndex);
+            if (linkIndices == null || linkIndices.Length == 0) {
+               break;
+            }
+
+            nodeGraph.GetNodePosition(currentNodeIndex, out var currentPos);
+ 
+            Vector3 referenceDirection;
+            if (pathNodes.Count < 2) {
+               referenceDirection = Vector3.zero;
+            } else {
+               nodeGraph.GetNodePosition(pathNodes[pathNodes.Count - 2], out var prevPos);
+               referenceDirection = (currentPos - prevPos).normalized;
+            }
+
+            var scoredLinks = new List<(RoR2.Navigation.NodeGraph.LinkIndex linkIndex, float score)>();
+            foreach (var linkIndex in linkIndices) {
+               var l = nodeGraph.links[linkIndex.linkIndex];
+               // Pick the other end of the link
+               var nIdx = l.nodeIndexA.nodeIndex == currentNodeIndex.nodeIndex ? l.nodeIndexB : l.nodeIndexA;
+
+               float score = 1.0f;
+
+               // Penalize visited
+               if (pathNodes.Any(p => p.nodeIndex == nIdx.nodeIndex)) {
+                  score *= 0.1f;
+               }
+
+               // Prefer forward
+               if (nodeGraph.GetNodePosition(nIdx, out var nextPos)) {
+                  var direction = (nextPos - currentPos).normalized;
+                  var dot = Vector3.Dot(referenceDirection, direction);
+                  // Map dot from [-1, 1] to [0.1, 2.1]
+                  score *= (dot + 1.1f);
+               }
+
+               scoredLinks.Add((linkIndex, score));
+            }
+
+            // Weighted random selection
+            var totalWeight = scoredLinks.Sum(s => s.score);
+            if (totalWeight <= 0) {
+               break;
+            } 
+
+            float randomWeight = (float)random.NextDouble() * totalWeight;
+            float cumulativeWeight = 0;
+
+            RoR2.Navigation.NodeGraph.NodeIndex nextNodeIndex = currentNodeIndex;
+            foreach (var scoredLink in scoredLinks) {
+               cumulativeWeight += scoredLink.score;
+               if (cumulativeWeight >= randomWeight) {
+                  var l = nodeGraph.links[scoredLink.linkIndex.linkIndex];
+                  nextNodeIndex = l.nodeIndexA.nodeIndex == currentNodeIndex.nodeIndex ? l.nodeIndexB : l.nodeIndexA;
+                  break;
+               }
+            }
+
+            // Safety: Stop if we are stuck at the same node
+            if (nextNodeIndex.nodeIndex == currentNodeIndex.nodeIndex) {
+               break;
+            }
+
+            currentNodeIndex = nextNodeIndex;
+            pathNodes.Add(currentNodeIndex);
+         }
+
+         if (pathNodes.Count < 2) {
+            DisplayAndFadeOutText("Could not generate a path");
+            _isAutoDollyActive = false;
+            yield break;
+         }
+
+         var autoDollyStates = new List<PhotoModeCameraState>();
+
+         foreach (var nodeIndex in pathNodes) {
+            if (nodeGraph.GetNodePosition(nodeIndex, out var pos)) {
+               var offset = new Vector3(0, 3, 0);
+               var variance = _settings.AutoDollyPathVariance.Value;
+               if (variance > 0) {
+                  var sphere = UnityEngine.Random.insideUnitSphere * variance;
+                  sphere.y = Mathf.Abs(sphere.y);
+                  offset += sphere;
+               }
+
+               var state = new PhotoModeCameraState {
+                  position = pos + offset,
+                  fov = 60,
+                  FocusDistance = _cameraState.FocusDistance,
+                  Aperture = _cameraState.Aperture,
+                  FocalLength = _cameraState.FocalLength
+               };
+
+               autoDollyStates.Add(state);
+            }
+         }
+
+         for (int i = 0; i < autoDollyStates.Count; i++) {
+            var current = autoDollyStates[i];
+
+            // Look 2 points ahead
+            int lookAheadIndex = Mathf.Min(i + 2, autoDollyStates.Count - 1);
+            if (lookAheadIndex == i && i > 0) {
+               // If we're at the end, keep looking in the same direction as the previous point
+               current.rotation = autoDollyStates[i - 1].rotation;
+            }
+            else {
+               var lookTarget = autoDollyStates[lookAheadIndex];
+               if (lookTarget.position != current.position) {
+                  current.rotation = Quaternion.LookRotation(lookTarget.position - current.position);
+               }
+               else if (i > 0) {
+                  current.rotation = autoDollyStates[i - 1].rotation;
+               }
+            }
+
+            autoDollyStates[i] = current;
+         }
+
+         var dollyService = new DollyService(_settings.SmoothDolly.Value, _settings.DollyCamSpeed.Value, _settings.DollyEasingFunction.Value);
+         var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, autoDollyStates, (int) _settings.NumberOfDollyPoints.Value, false);
+         yield return dollyService.MultiPointDollyPlayback(curve, state => _cameraState = state);
       }
    }
 }

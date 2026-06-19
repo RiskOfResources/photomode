@@ -9,7 +9,6 @@ public class SmoothCurve {
 	public static List<PhotoModeCameraState> GenerateSmoothCurve(LineRenderer lineRenderer,
 		List<PhotoModeCameraState> controlPoints, int numberOfPoints, bool smoothDolly)
 	{
-		Color color = Color.white;
 		float width = 0.2f;
 		var curve = new List<PhotoModeCameraState>();
 
@@ -18,8 +17,6 @@ public class SmoothCurve {
 		}
 
 		lineRenderer.useWorldSpace = true;
-		lineRenderer.startColor = color;
-		lineRenderer.endColor = color;
 		lineRenderer.startWidth = width;
 		lineRenderer.endWidth = width;
 		lineRenderer.positionCount = numberOfPoints * (controlPoints.Count - 1);
@@ -64,7 +61,7 @@ public class SmoothCurve {
 				               + (t * t * t - 2.0f * t * t + t) * m0 
 				               + (-2.0f * t * t * t + 3.0f * t * t) * p1 
 				               + (t * t * t - t * t) * m1;
-				lineRenderer.SetPosition(i + j * numberOfPoints, position);
+				lineRenderer.SetPosition(i + j * numberOfPoints, position + Vector3.down);
 				var currentState = controlPoints[j];
 				var nextState = controlPoints[j + 1];
 				var ratio = (float) (i + j * numberOfPoints) / lineRenderer.positionCount;

@@ -7,7 +7,8 @@ using RoR2.UI;
 using RoR2.UI.SkinControllers;
 using UnityEngine;
 using UnityEngine.UI;
-
+using System.Security.Permissions;
+[assembly: SecurityPermission( SecurityAction.RequestMinimum, SkipVerification = true )]
 namespace PhotoMode;
 
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]

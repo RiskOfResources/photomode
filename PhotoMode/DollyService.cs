@@ -40,40 +40,48 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
    }
 
    public IEnumerator MultiPointDollyPlayback(List<PhotoModeCameraState> positionCurve, Action<PhotoModeCameraState> onCameraChange) {
-      List<PhotoModeCameraState> states = positionCurve;
-      var index = 0;
-      var linearCamera = states[0];
+      var segmentLengths = new float[positionCurve.Count - 1];
+      var totalLength = 0f;
+      for (int i = 0; i < positionCurve.Count - 1; i++) {
+         segmentLengths[i] = Vector3.Distance(positionCurve[i].position, positionCurve[i + 1].position);
+         totalLength += segmentLengths[i];
+      }
 
-      while (index < states.Count - 1) {
-         var prevState = states[index];
-         var nextState = states[index + 1];
-         var totalDistance = Vector3.Distance(prevState.position, nextState.position);
+      var distanceTraveled = 0f;
+      while (distanceTraveled < totalLength) {
+         distanceTraveled += CamSpeed * Time.unscaledDeltaTime;
+         var linearProgress = Mathf.Clamp01(distanceTraveled / totalLength);
+         var easedProgress = GetEasedRatio(linearProgress, easing);
+         var targetDistance = easedProgress * totalLength;
 
-         // don't divide by 0
-         if (Mathf.Approximately(totalDistance, 0)) {
-            index++;
-            continue;
+         var index = 0;
+         var currentSegmentDist = 0f;
+
+         for (int i = 0; i < segmentLengths.Length; i++) {
+            if (targetDistance <= currentSegmentDist + segmentLengths[i]) {
+               index = i;
+               break;
+            }
+
+            currentSegmentDist += segmentLengths[i];
+            index = i;
          }
 
-         var distance = CamSpeed * Time.unscaledDeltaTime;
-         linearCamera.position = Vector3.MoveTowards(linearCamera.position, nextState.position, distance);
-         var linearDistance = Vector3.Distance(linearCamera.position, nextState.position);
-         var movePct = (totalDistance - linearDistance) / totalDistance;
-         var currentState = PhotoModeCameraState.Lerp(ref prevState, ref nextState, movePct);
-
-         if (Mathf.Approximately(linearDistance, 0)) {
-            prevState = nextState;
-            index++;
-         }
+         var segmentProgress = (targetDistance - currentSegmentDist) / Mathf.Max(segmentLengths[index], 0.0001f);
+         var prevState = positionCurve[index];
+         var nextState = positionCurve[index + 1];
+         var currentState = PhotoModeCameraState.Lerp(ref prevState, ref nextState, segmentProgress);
 
          // if we're not using a perfectly smooth dolly we can apply the easings to smooth out rotations
          if (!smoothDolly) {
             var (currentControlPoint, nextControlPoint) = prevState.ControlPoints;
             var controlPointDistance = Vector3.Distance(currentControlPoint.position, nextControlPoint.position);
-            var controlPointPct = (controlPointDistance - Vector3.Distance(linearCamera.position, nextControlPoint.position)) / controlPointDistance;
-            var eased = GetEasedRatio(controlPointPct, easing);
-            eased = Mathf.Clamp01(eased);
-            currentState.rotation = Quaternion.Slerp(currentControlPoint.rotation, nextControlPoint.rotation, eased);
+ 
+            if (!Mathf.Approximately(controlPointDistance, 0)) {
+               var controlPointPct = (controlPointDistance - Vector3.Distance(currentState.position, nextControlPoint.position)) / controlPointDistance;
+               var easedRot = Mathf.Clamp01(GetEasedRatio(controlPointPct, easing));
+               currentState.rotation = Quaternion.Slerp(currentControlPoint.rotation, nextControlPoint.rotation, easedRot);
+            }
          }
 
          UpdateCamera(currentState, onCameraChange);
@@ -86,11 +94,11 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
          CameraState = currentState,
          Priority = UpdatePriority.Dolly
       });
-      
+
       onCameraChange?.Invoke(currentState);
    }
 
-   private float GetEasedRatio(float x, Easing e) {
+   public static float GetEasedRatio(float x, Easing e) {
       switch (e) {
          case Easing.Linear:
             return x;

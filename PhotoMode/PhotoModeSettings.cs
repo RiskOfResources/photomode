@@ -48,6 +48,8 @@ public class PhotoModeSettings {
       DollyCamSpeed = CreatePhotoModeSetting(SettingCategory.General, "Dolly Cam Speed", 5f, "Speed at which the dolly cam pans/rotates", 0);
       DollyFollowRotation = CreatePhotoModeSetting(SettingCategory.General, "Dolly Follows Rotation", true, "If the dolly camera should follow the rotation you set at the checkpoints or only follow the path and let the user control the rotation.");
       NumberOfDollyPoints = CreatePhotoModeSetting(SettingCategory.General, "Dolly Path Smoothing", 50, "How many line segments to break the dolly path into to create a smooth path. Only applies when you have at least 1 checkpoint. The more points you add the slower the dolly will move.", min: 2, max: 5000, increment: 1);
+      AutoDollyPathLength = CreatePhotoModeSetting(SettingCategory.General, "Auto Dolly Path Length", 20f, "How many nodes to visit in the auto dolly path.", min: 1, max: 1000, increment: 1);
+      AutoDollyPathVariance = CreatePhotoModeSetting(SettingCategory.General, "Auto Dolly Path Variance", 1f, "How much variance to deviate from the ground node positions", min: 0, max: 1000, increment: 0.5f);
       DollyFollowsFocus = CreatePhotoModeSetting(SettingCategory.General, "Dolly Auto-Focus", false, "If the dolly should follow your focus changes.");
       SmoothDolly = CreatePhotoModeSetting(SettingCategory.General, "Smooth Dolly Cam", true, "Smooths out dolly movements by sacrificing some rotational accuracy when using at least 1 checkpoint (at least 3 dolly points total).");
       
@@ -60,6 +62,7 @@ public class PhotoModeSettings {
       AutoCamKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Auto Cam", new KeyboardShortcut(KeyCode.B));
       ToggleRecordingKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Recording Key", new KeyboardShortcut(KeyCode.R));
       DollyPlaybackKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Dolly Playback Key", new KeyboardShortcut(KeyCode.P));
+      AutoDollyKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Auto Dolly Path Key", new KeyboardShortcut(KeyCode.U));
       DollyCheckpointKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Add Dolly Checkpoint", new KeyboardShortcut(KeyCode.T));
       IncreaseTimeScaleKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Increase Time Scale", new KeyboardShortcut(KeyCode.PageUp));
       DecreaseTimeScaleKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Decrease Time Scale", new KeyboardShortcut(KeyCode.PageDown));
@@ -79,6 +82,7 @@ public class PhotoModeSettings {
       ArcPanningSmoothTime = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Panning Smooth Time", 1f, "How many seconds to smooth the camera position when the target of an arc camera moves", 0);
       SmoothArcCamSpeed = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Smooth Arc Camera Speed", 5f, "Amount of smoothing for the arc camera", 0);
       RestrictArcPlayers = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Arc Around Players Only", true, "Whether to arc around players or any model in the scene");
+      // AutoCamAvoidWallClipping = CreatePhotoModeSetting(SettingCategory.ArcCamera, "Avoid Wall Clipping", true, "True to avoid clipping into the wall");
 
       // post processing
       PostProcessing = CreatePhotoModeSetting(SettingCategory.PostProcessing, "Enable Post Processing", true, "Enable post processing effects");
@@ -103,6 +107,7 @@ public class PhotoModeSettings {
       ShowHudByDefault = CreatePhotoModeSetting(SettingCategory.UI, "Show HUD", true, "Show the photo mode HUD");
       ShowGameHud = CreatePhotoModeSetting(SettingCategory.UI, "Show Game HUD", false, "Show the game's HUD while in photo mode");
       ShowDollyPath = CreatePhotoModeSetting(SettingCategory.UI, "Show Dolly Path", false, "Show the path of the dolly (mostly for debugging).");
+      DollyPathColor = CreatePhotoModeSetting(SettingCategory.UI, "Dolly Path Color", new Color(0.36f, 0f, 0.73f), "Color for the dolly path.");
       
       // experimental
       DisableAllMovement = CreatePhotoModeSetting(SettingCategory.Experimental, "Disable All Camera Movement", false, "Disable movement for external control or testing.");
@@ -175,6 +180,8 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<float> DollyCamSpeed;
    public readonly PhotoModeSetting<bool> DollyFollowRotation;
    public readonly PhotoModeSetting<float> NumberOfDollyPoints;
+   public readonly PhotoModeSetting<float> AutoDollyPathLength;
+   public readonly PhotoModeSetting<float> AutoDollyPathVariance;
    public readonly PhotoModeSetting<bool> DollyFollowsFocus;
    public readonly PhotoModeSetting<bool> SmoothDolly;
 
@@ -188,6 +195,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<KeyboardShortcut> AutoCamKey;
    public readonly PhotoModeSetting<KeyboardShortcut> ToggleRecordingKey;
    public readonly PhotoModeSetting<KeyboardShortcut> DollyPlaybackKey;
+   public readonly PhotoModeSetting<KeyboardShortcut> AutoDollyKey;
    public readonly PhotoModeSetting<KeyboardShortcut> DollyCheckpointKey;
    public readonly PhotoModeSetting<KeyboardShortcut> IncreaseTimeScaleKey;
    public readonly PhotoModeSetting<KeyboardShortcut> DecreaseTimeScaleKey;
@@ -207,6 +215,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<float> ArcPanningSmoothTime;
    public readonly PhotoModeSetting<float> SmoothArcCamSpeed;
    public readonly PhotoModeSetting<bool> RestrictArcPlayers;
+   public readonly PhotoModeSetting<bool> AutoCamAvoidWallClipping;
 
    // post processing
    public readonly PhotoModeSetting<bool> PostProcessing;
@@ -230,6 +239,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> ShowHudByDefault;
    public readonly PhotoModeSetting<bool> ShowGameHud;
    public readonly PhotoModeSetting<bool> ShowDollyPath;
+   public readonly PhotoModeSetting<Color> DollyPathColor;
    public readonly PhotoModeSetting<bool> DisableAllMovement;
    public readonly PhotoModeSetting<bool> ExportLinearColorSpace;
    public readonly PhotoModeSetting<string> LutName;
