@@ -9,7 +9,7 @@ namespace PhotoMode;
 public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) {
    private float CamSpeed => CameraControl.Instance.GetCameraSpeed(dollyCamSpeed);
 
-   public IEnumerator DollyPlayback(List<PhotoModeCameraState> dollyStates, Action<PhotoModeCameraState> onCameraChange) {
+   public IEnumerator DollyPlayback(List<PhotoModeCameraState> dollyStates) {
       var dollyIndex = 0;
       var linearCamera = dollyStates[0];
 
@@ -34,12 +34,12 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
             dollyIndex++;
          }
 
-         UpdateCamera(currentState, onCameraChange);
+         UpdateCamera(currentState);
          yield return null;
       }
    }
 
-   public IEnumerator MultiPointDollyPlayback(List<PhotoModeCameraState> positionCurve, Action<PhotoModeCameraState> onCameraChange) {
+   public IEnumerator MultiPointDollyPlayback(List<PhotoModeCameraState> positionCurve) {
       var segmentLengths = new float[positionCurve.Count - 1];
       var totalLength = 0f;
       for (int i = 0; i < positionCurve.Count - 1; i++) {
@@ -84,18 +84,16 @@ public class DollyService(bool smoothDolly, float dollyCamSpeed, Easing easing) 
             }
          }
 
-         UpdateCamera(currentState, onCameraChange);
+         UpdateCamera(currentState);
          yield return null;
       }
    }
 
-   private void UpdateCamera(PhotoModeCameraState currentState, Action<PhotoModeCameraState> onCameraChange) {
+   private void UpdateCamera(PhotoModeCameraState currentState) {
       CameraUpdater.UpdateCameraState(new CameraStateUpdateMessage {
          CameraState = currentState,
          Priority = UpdatePriority.Dolly
       });
-
-      onCameraChange?.Invoke(currentState);
    }
 
    public static float GetEasedRatio(float x, Easing e) {

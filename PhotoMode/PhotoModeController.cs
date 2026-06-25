@@ -123,7 +123,9 @@ internal class PhotoModeController : MonoBehaviour {
          globalPostProcess.enabled = !settings.BreakBeforeColorGrading.Value;
       }
 
-      _cameraState = gameObject.AddComponent<CameraUpdater>().Init(cameraRigController, _settings);
+      var cameraUpdater = gameObject.AddComponent<CameraUpdater>();
+      cameraUpdater.OnCameraStateUpdated += (_, state) => _cameraState.State = state;
+      _cameraState = cameraUpdater.Init(cameraRigController, _settings);
    }
 
    private void OnDisable()
@@ -247,10 +249,10 @@ internal class PhotoModeController : MonoBehaviour {
 
          if (dollyStates.Count > 2) {
             var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, dollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
-            _dollyPlaybackCoroutine = dollyService.MultiPointDollyPlayback(curve, state => _cameraState = state);
+            _dollyPlaybackCoroutine = dollyService.MultiPointDollyPlayback(curve);
          }
          else {
-            _dollyPlaybackCoroutine = dollyService.DollyPlayback(dollyStates, state => _cameraState = state);
+            _dollyPlaybackCoroutine = dollyService.DollyPlayback(dollyStates);
          }
  
          StopCoroutine(_dollyPlaybackCoroutine);
@@ -612,7 +614,7 @@ internal class PhotoModeController : MonoBehaviour {
 
          var dollyService = new DollyService(_settings.SmoothDolly.Value, _settings.DollyCamSpeed.Value, _settings.DollyEasingFunction.Value);
          var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, autoDollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
-         yield return dollyService.MultiPointDollyPlayback(curve, state => _cameraState = state);
+         yield return dollyService.MultiPointDollyPlayback(curve);
       }
    }
 
@@ -666,7 +668,7 @@ internal class PhotoModeController : MonoBehaviour {
             var randomWeight = (float)random.NextDouble() * totalWeight;
             float cumulativeWeight = 0;
          
-            RoR2.Navigation.NodeGraph.NodeIndex nextNodeIndex = currentNodeIndex;
+            NodeGraph.NodeIndex nextNodeIndex = currentNodeIndex;
             foreach (var scoredLink in scoredLinks) {
                cumulativeWeight += scoredLink.score;
                if (cumulativeWeight >= randomWeight) {
@@ -687,8 +689,10 @@ internal class PhotoModeController : MonoBehaviour {
          return pathNodes;
       }
 
-      private float maxScore = -1f;
+      private float _maxScore = -1f;
       public List<(List<NodeGraph.NodeIndex>, float)> SlowAccurate(NodeGraph nodeGraph) {
+         _maxScore = -1f;
+ 
          var nodes = nodeGraph.nodes;
          var i = UnityEngine.Random.Range(0, nodes.Length);
          var startNodeIndex = new NodeGraph.NodeIndex(i);
@@ -705,7 +709,7 @@ internal class PhotoModeController : MonoBehaviour {
          var remainingSteps = maxDepth - depth;
          var bestPossibleFutureScore = totalScore + (remainingSteps * 2.0f);
 
-         if (bestPossibleFutureScore <= maxScore) {
+         if (bestPossibleFutureScore <= _maxScore) {
             return;
          }
  
@@ -714,8 +718,8 @@ internal class PhotoModeController : MonoBehaviour {
          graph.GetNodePosition(current, out var currentPosition);
 
          if (depth >= maxDepth) {
-            if (totalScore > maxScore) {
-               maxScore = totalScore;
+            if (totalScore > _maxScore) {
+               _maxScore = totalScore;
                var path = currentPath.ToList();
                path.Reverse();
                results.Clear();

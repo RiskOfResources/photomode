@@ -6,6 +6,7 @@ using UnityEngine;
 namespace PhotoMode;
 
 public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
+   public event EventHandler<CameraState> OnCameraStateUpdated; 
    private static event EventHandler<CameraStateUpdateMessage> OnCameraStateUpdate; 
    private readonly PriorityQueue<CameraStateUpdateMessage> _cameraUpdates = new();
    private bool _disableAllMovement;
@@ -54,9 +55,11 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
       foreach (var updates in _cameraUpdates.Dequeue()) {
          var cameraState = updates.CameraState;
          _cameraRigController.sceneCam.transform.position = cameraState.position;
+         _cameraRigController.currentCameraState.position = cameraState.position;
 
          if (updates.Priority != UpdatePriority.Dolly || _followDollyRotation) {
             _cameraRigController.sceneCam.transform.rotation = cameraState.rotation;
+            _cameraRigController.currentCameraState.rotation = cameraState.rotation;
          }
 
          if (updates.Priority != UpdatePriority.Dolly || _autoFocus) {
@@ -68,9 +71,12 @@ public class CameraUpdater : MonoBehaviour, ICameraStateProvider {
          _cameraRigController.sceneCam.fieldOfView = cameraState.fov;
          _cameraRigController.currentCameraState.fov = cameraState.fov;
       }
+ 
+      OnCameraStateUpdated?.Invoke(null, _cameraRigController.currentCameraState);
    }
 
    private void OnDestroy() {
+      OnCameraStateUpdated = null;
       OnCameraStateUpdate -= CameraStateUpdate;
       _cameraRigController.enableFading = true;
       _cameraRigController.SetOverrideCam(null);
