@@ -6,6 +6,7 @@ using System.Reflection;
 using R2API.Utils;
 using Rewired;
 using RoR2;
+using RoR2.Navigation;
 using RoR2.UI;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
@@ -544,80 +545,23 @@ internal class PhotoModeController : MonoBehaviour {
             yield break;
          }
 
-         var random = new System.Random();
          var pathLength = (int)_settings.AutoDollyPathLength.Value;
-         var pathNodes = new List<RoR2.Navigation.NodeGraph.NodeIndex>();
+         var pathNodes = new List<NodeGraph.NodeIndex>();
+         var fastPathGeneration = _settings.AutoDollyFastPathGeneration.Value || pathLength >= 25;
+         var traversal = new NodeTraversal(fastPathGeneration ? pathLength : Math.Min(pathLength, 25));
 
-         var startNodeIndex = random.Next(nodes.Length);
-         var currentNodeIndex = new RoR2.Navigation.NodeGraph.NodeIndex(startNodeIndex);
-         pathNodes.Add(currentNodeIndex);
-
-         for (int i = 0; i < pathLength; i++) {
-            var linkIndices = nodeGraph.GetActiveNodeLinks(currentNodeIndex);
-            if (linkIndices == null || linkIndices.Length == 0) {
-               break;
-            }
-
-            nodeGraph.GetNodePosition(currentNodeIndex, out var currentPos);
- 
-            Vector3 referenceDirection;
-            if (pathNodes.Count < 2) {
-               referenceDirection = Vector3.zero;
-            } else {
-               nodeGraph.GetNodePosition(pathNodes[pathNodes.Count - 2], out var prevPos);
-               referenceDirection = (currentPos - prevPos).normalized;
-            }
-
-            var scoredLinks = new List<(RoR2.Navigation.NodeGraph.LinkIndex linkIndex, float score)>();
-            foreach (var linkIndex in linkIndices) {
-               var l = nodeGraph.links[linkIndex.linkIndex];
-               // Pick the other end of the link
-               var nIdx = l.nodeIndexA.nodeIndex == currentNodeIndex.nodeIndex ? l.nodeIndexB : l.nodeIndexA;
-
-               float score = 1.0f;
-
-               // Penalize visited
-               if (pathNodes.Any(p => p.nodeIndex == nIdx.nodeIndex)) {
-                  score *= 0.1f;
-               }
-
-               // Prefer forward
-               if (nodeGraph.GetNodePosition(nIdx, out var nextPos)) {
-                  var direction = (nextPos - currentPos).normalized;
-                  var dot = Vector3.Dot(referenceDirection, direction);
-                  // Map dot from [-1, 1] to [0.1, 2.1]
-                  score *= (dot + 1.1f);
-               }
-
-               scoredLinks.Add((linkIndex, score));
-            }
-
-            // Weighted random selection
-            var totalWeight = scoredLinks.Sum(s => s.score);
-            if (totalWeight <= 0) {
-               break;
-            } 
-
-            float randomWeight = (float)random.NextDouble() * totalWeight;
-            float cumulativeWeight = 0;
-
-            RoR2.Navigation.NodeGraph.NodeIndex nextNodeIndex = currentNodeIndex;
-            foreach (var scoredLink in scoredLinks) {
-               cumulativeWeight += scoredLink.score;
-               if (cumulativeWeight >= randomWeight) {
-                  var l = nodeGraph.links[scoredLink.linkIndex.linkIndex];
-                  nextNodeIndex = l.nodeIndexA.nodeIndex == currentNodeIndex.nodeIndex ? l.nodeIndexB : l.nodeIndexA;
-                  break;
+         if (fastPathGeneration) {
+            pathNodes = traversal.FastSimple(nodeGraph, pathLength);
+         }
+         else {
+            var results = traversal.SlowAccurate(nodeGraph);
+            var maxScore = -1f;
+            foreach (var (list, score) in results) {
+               if (score > maxScore) {
+                  pathNodes = list;
+                  maxScore = score;
                }
             }
-
-            // Safety: Stop if we are stuck at the same node
-            if (nextNodeIndex.nodeIndex == currentNodeIndex.nodeIndex) {
-               break;
-            }
-
-            currentNodeIndex = nextNodeIndex;
-            pathNodes.Add(currentNodeIndex);
          }
 
          if (pathNodes.Count < 2) {
@@ -654,27 +598,150 @@ internal class PhotoModeController : MonoBehaviour {
             var current = autoDollyStates[i];
 
             // Look 2 points ahead
-            int lookAheadIndex = Mathf.Min(i + 2, autoDollyStates.Count - 1);
-            if (lookAheadIndex == i && i > 0) {
-               // If we're at the end, keep looking in the same direction as the previous point
+            var lookAheadIndex = Mathf.Min(i + 2, autoDollyStates.Count - 1);
+            var lookTarget = autoDollyStates[lookAheadIndex];
+            if (i == autoDollyStates.Count - 1 && i > 0) {
                current.rotation = autoDollyStates[i - 1].rotation;
             }
-            else {
-               var lookTarget = autoDollyStates[lookAheadIndex];
-               if (lookTarget.position != current.position) {
-                  current.rotation = Quaternion.LookRotation(lookTarget.position - current.position);
-               }
-               else if (i > 0) {
-                  current.rotation = autoDollyStates[i - 1].rotation;
-               }
+            else if ((lookTarget.position - current.position).sqrMagnitude > Mathf.Epsilon) {
+               current.rotation = Quaternion.LookRotation(lookTarget.position - current.position);
             }
-
+ 
             autoDollyStates[i] = current;
          }
 
          var dollyService = new DollyService(_settings.SmoothDolly.Value, _settings.DollyCamSpeed.Value, _settings.DollyEasingFunction.Value);
-         var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, autoDollyStates, (int) _settings.NumberOfDollyPoints.Value, false);
+         var curve = SmoothCurve.GenerateSmoothCurve(_lineRenderer, autoDollyStates, (int) _settings.NumberOfDollyPoints.Value, _settings.SmoothDolly.Value);
          yield return dollyService.MultiPointDollyPlayback(curve, state => _cameraState = state);
+      }
+   }
+
+   private class NodeTraversal(int maxDepth) {
+      public List<NodeGraph.NodeIndex> FastSimple(NodeGraph nodeGraph, int pathLength) {
+         var random = new System.Random();
+         var startNodeIndex = random.Next(nodeGraph.nodes.Length);
+         var currentNodeIndex = new NodeGraph.NodeIndex(startNodeIndex);
+         var pathNodes = new List<NodeGraph.NodeIndex>();
+         pathNodes.Add(currentNodeIndex);
+         for (int i = 0; i < pathLength; i++) {
+            var linkIndices = nodeGraph.GetActiveNodeLinks(currentNodeIndex);
+            if (linkIndices == null || linkIndices.Length == 0) {
+               break;
+            }
+         
+            nodeGraph.GetNodePosition(currentNodeIndex, out var currentPos);
+         
+            Vector3 referenceDirection;
+            if (pathNodes.Count < 2) {
+               referenceDirection = Vector3.zero;
+            } else {
+               nodeGraph.GetNodePosition(pathNodes[pathNodes.Count - 2], out var prevPos);
+               referenceDirection = (currentPos - prevPos).normalized;
+            }
+         
+            var scoredLinks = new List<(NodeGraph.LinkIndex linkIndex, float score)>();
+            foreach (var linkIndex in linkIndices) {
+               var nIdx = nodeGraph.GetLinkEndNode(linkIndex);
+               var score = 1.0f;
+         
+               if (pathNodes.Any(p => p.nodeIndex == nIdx.nodeIndex)) {
+                  score *= 0.1f;
+               }
+         
+               if (nodeGraph.GetNodePosition(nIdx, out var nextPos)) {
+                  var direction = (nextPos - currentPos).normalized;
+                  var dot = Vector3.Dot(referenceDirection, direction);
+                  score *= (dot + 1.1f);
+               }
+         
+               scoredLinks.Add((linkIndex, score));
+            }
+         
+            // Weighted random selection
+            var totalWeight = scoredLinks.Sum(s => s.score);
+            if (totalWeight <= 0) {
+               break;
+            } 
+         
+            var randomWeight = (float)random.NextDouble() * totalWeight;
+            float cumulativeWeight = 0;
+         
+            RoR2.Navigation.NodeGraph.NodeIndex nextNodeIndex = currentNodeIndex;
+            foreach (var scoredLink in scoredLinks) {
+               cumulativeWeight += scoredLink.score;
+               if (cumulativeWeight >= randomWeight) {
+                  var l = nodeGraph.links[scoredLink.linkIndex.linkIndex];
+                  nextNodeIndex = l.nodeIndexA.nodeIndex == currentNodeIndex.nodeIndex ? l.nodeIndexB : l.nodeIndexA;
+                  break;
+               }
+            }
+         
+            if (nextNodeIndex.nodeIndex == currentNodeIndex.nodeIndex) {
+               break;
+            }
+         
+            currentNodeIndex = nextNodeIndex;
+            pathNodes.Add(currentNodeIndex);
+         }
+
+         return pathNodes;
+      }
+
+      private float maxScore = -1f;
+      public List<(List<NodeGraph.NodeIndex>, float)> SlowAccurate(NodeGraph nodeGraph) {
+         var nodes = nodeGraph.nodes;
+         var i = UnityEngine.Random.Range(0, nodes.Length);
+         var startNodeIndex = new NodeGraph.NodeIndex(i);
+         var results = new List<(List<NodeGraph.NodeIndex>, float)>();
+         dfs(nodeGraph, startNodeIndex, 1, Vector3.zero, new Stack<NodeGraph.NodeIndex>(), 0, results, new HashSet<NodeGraph.NodeIndex>());
+         return results;
+      }
+      
+      private void dfs(NodeGraph graph, NodeGraph.NodeIndex current, int depth, Vector3 currentTrajectory, Stack<NodeGraph.NodeIndex> currentPath, float totalScore, List<(List<NodeGraph.NodeIndex>, float)> results, HashSet<NodeGraph.NodeIndex> visited) {
+         if (visited.Contains(current) || current == NodeGraph.NodeIndex.invalid) {
+            return;
+         }
+         
+         var remainingSteps = maxDepth - depth;
+         var bestPossibleFutureScore = totalScore + (remainingSteps * 2.0f);
+
+         if (bestPossibleFutureScore <= maxScore) {
+            return;
+         }
+ 
+         visited.Add(current);
+         currentPath.Push(current);
+         graph.GetNodePosition(current, out var currentPosition);
+
+         if (depth >= maxDepth) {
+            if (totalScore > maxScore) {
+               maxScore = totalScore;
+               var path = currentPath.ToList();
+               path.Reverse();
+               results.Clear();
+               results.Add((path, totalScore));
+            }
+ 
+            currentPath.Pop();
+            visited.Remove(current);
+            return;
+         }
+ 
+         foreach (var links in graph.GetActiveNodeLinks(current)) {
+            var node = graph.GetLinkEndNode(links);
+            if (node == NodeGraph.NodeIndex.invalid) {
+               continue;
+            }
+ 
+            graph.GetNodePosition(node, out var nextPosition);
+            var newTrajectory = (nextPosition - currentPosition).normalized;
+            var dot = Vector3.Dot(currentTrajectory, newTrajectory);
+            var score = dot + 1;
+            dfs(graph, node, depth + 1, newTrajectory, currentPath, totalScore + score, results, visited);
+         }
+
+         currentPath.Pop();
+         visited.Remove(current);
       }
    }
 }

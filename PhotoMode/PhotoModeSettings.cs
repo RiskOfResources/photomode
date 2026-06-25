@@ -47,9 +47,10 @@ public class PhotoModeSettings {
       DollyEasingFunction = CreatePhotoModeSetting(SettingCategory.General, "Dolly Easing Function", Easing.Linear, "How the dolly cam transitions between states. In means start slow and end fast, out means start fast and end slow.");
       DollyCamSpeed = CreatePhotoModeSetting(SettingCategory.General, "Dolly Cam Speed", 5f, "Speed at which the dolly cam pans/rotates", 0);
       DollyFollowRotation = CreatePhotoModeSetting(SettingCategory.General, "Dolly Follows Rotation", true, "If the dolly camera should follow the rotation you set at the checkpoints or only follow the path and let the user control the rotation.");
-      NumberOfDollyPoints = CreatePhotoModeSetting(SettingCategory.General, "Dolly Path Smoothing", 50, "How many line segments to break the dolly path into to create a smooth path. Only applies when you have at least 1 checkpoint. The more points you add the slower the dolly will move.", min: 2, max: 5000, increment: 1);
-      AutoDollyPathLength = CreatePhotoModeSetting(SettingCategory.General, "Auto Dolly Path Length", 20f, "How many nodes to visit in the auto dolly path.", min: 1, max: 1000, increment: 1);
-      AutoDollyPathVariance = CreatePhotoModeSetting(SettingCategory.General, "Auto Dolly Path Variance", 1f, "How much variance to deviate from the ground node positions", min: 0, max: 1000, increment: 0.5f);
+      NumberOfDollyPoints = CreatePhotoModeSetting(SettingCategory.General, "Dolly Path Smoothing", 50, "How many line segments to break the dolly path into to create a smooth path. Only applies when you have at least 1 checkpoint or with the auto dolly.", min: 2, max: 1000, increment: 1);
+      AutoDollyPathLength = CreatePhotoModeSetting(SettingCategory.General, "Auto Dolly Path Length", 10f, "How many nodes to visit in the auto dolly path. If you set this above 25 it will automatically enable the fast auto dolly path generation option below.", min: 1, max: 100, increment: 1);
+      AutoDollyPathVariance = CreatePhotoModeSetting(SettingCategory.General, "Auto Dolly Path Variance", 1f, "How much variance to deviate from the ground node positions", min: 0, max: 15, increment: 0.5f);
+      AutoDollyFastPathGeneration = CreatePhotoModeSetting(SettingCategory.General, "Fast Dolly Path Generation", false, "Use fast algorithm for generating paths instead of recursively checking all paths for the straightest.");
       DollyFollowsFocus = CreatePhotoModeSetting(SettingCategory.General, "Dolly Auto-Focus", false, "If the dolly should follow your focus changes.");
       SmoothDolly = CreatePhotoModeSetting(SettingCategory.General, "Smooth Dolly Cam", true, "Smooths out dolly movements by sacrificing some rotational accuracy when using at least 1 checkpoint (at least 3 dolly points total).");
       
@@ -182,6 +183,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<float> NumberOfDollyPoints;
    public readonly PhotoModeSetting<float> AutoDollyPathLength;
    public readonly PhotoModeSetting<float> AutoDollyPathVariance;
+   public readonly PhotoModeSetting<bool> AutoDollyFastPathGeneration;
    public readonly PhotoModeSetting<bool> DollyFollowsFocus;
    public readonly PhotoModeSetting<bool> SmoothDolly;
 
