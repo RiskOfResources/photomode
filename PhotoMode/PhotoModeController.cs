@@ -208,8 +208,8 @@ internal class PhotoModeController : MonoBehaviour {
    private void Update()
    {
       Player inputPlayer = _localUser.inputPlayer;
-      if (inputPlayer.GetButton(25)) {
-         Destroy(gameObject);
+      if (inputPlayer.GetButtonDown(25)) {
+         Destroy(this);
          return;
       }
 

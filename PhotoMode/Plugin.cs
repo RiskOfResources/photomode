@@ -8,6 +8,7 @@ using RoR2.UI.SkinControllers;
 using UnityEngine;
 using UnityEngine.UI;
 using System.Security.Permissions;
+
 [assembly: SecurityPermission( SecurityAction.RequestMinimum, SkipVerification = true )]
 namespace PhotoMode;
 
@@ -19,6 +20,7 @@ public class PhotoModePlugin : BaseUnityPlugin
 	public CameraRigController cameraRigController;
 	private static PhotoModeSettings _settings;
 	private WebService _webService;
+	private GameObject _pmGo;
 
 	public void Awake() {
 		try {
@@ -41,15 +43,61 @@ public class PhotoModePlugin : BaseUnityPlugin
 			});
 		}
 	}
-	
+
 	private void OnDestroy() {
 		On.RoR2.CameraRigController.OnEnable -= OnCameraRigControllerOnOnEnable;
 		On.RoR2.CameraRigController.OnDisable -= OnCameraRigControllerOnOnDisable;
 		On.RoR2.UI.PauseScreenController.Awake -= OnPauseScreenControllerOnAwake;
 	}
 
+	public void Update() {
+		if (cameraRigController && Input.GetKeyDown(_settings.TogglePhotoModeKey.Value.MainKey)) {
+			StartPhotoMode(Time.timeScale);
+		}
+	}
+
 	private void OnApplicationQuit() {
 		_webService?.Shutdown();
+	}
+
+	public void StartPhotoMode(float timeScale) {
+		if (!cameraRigController || cameraRigController.localUserViewer == null) {
+			return;
+		}
+
+		if (_pmGo) {
+			Debug.LogWarning("Photo mode is already open");
+			return;
+		}
+		
+		var fixedDeltaTime = Time.fixedDeltaTime;
+
+		_pmGo = new GameObject("PhotoModeController");
+		_pmGo.SetActive(false);
+		var controller = _pmGo.AddComponent<PhotoModeController>();
+		controller.OnExit += (_, _) => {
+			Destroy(_pmGo);
+			Time.timeScale = timeScale;
+			Time.fixedDeltaTime = fixedDeltaTime;
+			PauseManager.ClosePauseScreen(true);
+		};
+
+		controller.EnterPhotoMode(_settings, cameraRigController);
+		_pmGo.SetActive(true);
+		StartCoroutine(PauseAtEndOfFrame());
+
+		IEnumerator PauseAtEndOfFrame() {
+			yield return new WaitForEndOfFrame();
+			Time.timeScale = 0;
+
+			var physicsTickRate = _settings.PhysicsTickRate.Value;
+			if (physicsTickRate > 0) {
+				var physicsTickInterval = 1 / physicsTickRate;
+				if(!Mathf.Approximately(physicsTickInterval, fixedDeltaTime)) {
+					Time.fixedDeltaTime = physicsTickInterval;
+				}
+			}
+		}
 	}
 
 	private void SetupPhotoModeButton(PauseScreenController pauseScreenController) {
@@ -69,41 +117,17 @@ public class PhotoModePlugin : BaseUnityPlugin
 
 		if (!photoModeButton.TryGetComponent<HGButton>(out var component)) {
 			Debug.LogWarning("Failed to setup photo mode button");
-			Destroy(buttonGameObject);
+			Destroy(photoModeButton);
 			return;
 		}
 	
 		// time scale before pausing
 		var timeScale = Time.timeScale;
-		var fixedDeltaTime = Time.fixedDeltaTime;
 		component.interactable = cameraRigController && cameraRigController.localUserViewer != null;
 		component.onClick = new Button.ButtonClickedEvent();
 		component.onClick.AddListener(() => {
-			pauseScreenController.gameObject.SetActive(false);
-			var pmGo = new GameObject("PhotoModeController");
-			pmGo.SetActive(false);
-			var controller = pmGo.AddComponent<PhotoModeController>();
-			controller.OnExit += (_, _) => {
-				Time.timeScale = timeScale;
-				Time.fixedDeltaTime = fixedDeltaTime;
-			};
-	
-			controller.EnterPhotoMode(_settings, cameraRigController);
-			pmGo.SetActive(true);
-			StartCoroutine(PauseAtEndOfFrame());
-
-			IEnumerator PauseAtEndOfFrame() {
-				yield return new WaitForEndOfFrame();
-				Time.timeScale = 0;
-
-				var physicsTickRate = _settings.PhysicsTickRate.Value;
-				if (physicsTickRate > 0) {
-					var physicsTickInterval = 1 / physicsTickRate;
-					if(!Mathf.Approximately(physicsTickInterval, fixedDeltaTime)) {
-						Time.fixedDeltaTime = physicsTickInterval;
-					}
-				}
-			}
+			pauseScreenController.DestroyPauseScreen(true);
+			StartPhotoMode(timeScale);
 		});
 	}
 

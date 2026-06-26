@@ -1,6 +1,6 @@
 {
   "name": "PhotoMode",
-  "version_number": "3.4.1",
+  "version_number": "3.4.2",
   "website_url": "https://github.com/riskofresources/photomode",
   "description": "Photo Mode Redux. Installing Risk Of Options is highly recommended.",
   "dependencies": [

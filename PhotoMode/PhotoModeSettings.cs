@@ -55,6 +55,7 @@ public class PhotoModeSettings {
       SmoothDolly = CreatePhotoModeSetting(SettingCategory.General, "Smooth Dolly Cam", true, "Smooths out dolly movements by sacrificing some rotational accuracy when using at least 1 checkpoint (at least 3 dolly points total).");
       
       // key bindings
+      TogglePhotoModeKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle Photo Mode", new KeyboardShortcut(KeyCode.F8), "Shortcut to open photo mode without going through the pause menu.");
       RaiseCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Raise Camera", new KeyboardShortcut(KeyCode.E));
       LowerCameraKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Lower Camera", new KeyboardShortcut(KeyCode.Q));
       CameraSprintKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Speed Up Camera", new KeyboardShortcut(KeyCode.LeftControl));
@@ -72,7 +73,7 @@ public class PhotoModeSettings {
       NextPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Previous Player", new KeyboardShortcut(KeyCode.LeftArrow));
       PrevPlayerKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Arc Focus Next Player", new KeyboardShortcut(KeyCode.RightArrow));
       // CaptureScreen = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Capture Screen", new KeyboardShortcut(KeyCode.None), "Records RAW textures to PNGs and saves into your Risk of Rain 2 data folder. Huge file size since it captures at 4x resolution and at your current frame rate. Limit the frame rate or change resolution to adjust.");
-      SaveReplayBuffer = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Save Replay Buffer", new KeyboardShortcut(KeyCode.F9), "Save the current replay buffer as an image sequence to disk in your risk of rain 2 data/recordings folder.");
+      SaveReplayBuffer = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Save Replay Buffer", new KeyboardShortcut(KeyCode.None), "Save the current replay buffer as an image sequence to disk in your risk of rain 2 data/recordings folder.");
       ToggleHud = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Toggle HUD visibility", new KeyboardShortcut(KeyCode.H));
       ScrollWheelModifierKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Scroll Wheel Modifier", new KeyboardShortcut(KeyCode.LeftAlt), "Hold while scrolling to change the focal length instead of the focus distance.");
       ScrollWheelApertureModifierKey = CreatePhotoModeSetting(SettingCategory.KeyBindings, "Scroll Wheel Aperture Modifier", new KeyboardShortcut(KeyCode.LeftAlt, KeyCode.LeftShift), "Hold while scrolling to change the aperture instead of the focus distance.");
@@ -188,6 +189,7 @@ public class PhotoModeSettings {
    public readonly PhotoModeSetting<bool> SmoothDolly;
 
    // key bindings
+   public readonly PhotoModeSetting<KeyboardShortcut> TogglePhotoModeKey;
    public readonly PhotoModeSetting<KeyboardShortcut> RaiseCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> LowerCameraKey;
    public readonly PhotoModeSetting<KeyboardShortcut> CameraSprintKey;
